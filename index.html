@@ -2,11 +2,14 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Autoscale WA">
+<meta name="theme-color" content="#0A0C0F">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Autoscale WhatsApp · דונה</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQXV0b3NjYWxlIFdoYXRzQXBwIiwic2hvcnRfbmFtZSI6IkF1dG9zY2FsZSIsInN0YXJ0X3VybCI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMEEwQzBGIiwidGhlbWVfY29sb3IiOiIjMEEwQzBGIn0=">
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
@@ -14,45 +17,46 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body,#root{height:100%;background:#0A0C0F;font-family:'Rubik',system-ui,sans-serif}
+html,body,#root{height:100%;background:#0A0C0F;font-family:'Rubik',system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+body{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 @keyframes toast{0%{opacity:0;transform:translateY(6px)}15%{opacity:1;transform:translateY(0)}80%{opacity:1}100%{opacity:0}}
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
 textarea:focus,input:focus,button:focus{outline:none}
 button:active{transform:scale(0.97)}
 a{text-decoration:none}
 input:-webkit-autofill{-webkit-box-shadow:0 0 0 30px #10131A inset!important;-webkit-text-fill-color:#E5E5E5!important}
+::-webkit-scrollbar{width:0;display:none}
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel" data-type="module">
+// ══════ CONFIG ══════
+const SB_URL="https://hxkhecrxkvhnmyhwsbkj.supabase.co";
+const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh4a2hlY3J4a3Zobm15aHdzYmtqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5MzE4NjQsImV4cCI6MjA4OTUwNzg2NH0.nR5u1AKwCRSWm_ds0D44WTCp-Ik4h9dStJHKiheX8mg";
+const REPLY_WEBHOOK="https://hook.eu1.make.com/ud8h1l45j3gjkzm7q9p3p2gs4xx5iabt";
+const READ_WEBHOOK=""; // optional: webhook to send read receipts to WhatsApp
+const COST_PER_MSG=0.035;
+const WEBSITE="https://autoscale.co.il";
+const EMAIL_ADDR="info@autoscale.co.il";
+const sb=window.supabase.createClient(SB_URL,SB_KEY);
 
-// ══════════════════════════════════════════
-//  CONFIG — UPDATE THESE BEFORE DEPLOYING
-// ══════════════════════════════════════════
-const SUPABASE_URL = "https://hxkhecrxkvhnmyhwsbkj.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh4a2hlY3J4a3Zobm15aHdzYmtqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5MzE4NjQsImV4cCI6MjA4OTUwNzg2NH0.nR5u1AKwCRSWm_ds0D44WTCp-Ik4h9dStJHKiheX8mg";
-const REPLY_WEBHOOK = ""; // Make.com webhook URL for sending replies
-const COST_PER_MSG = 0.035;
-const WEBSITE_URL = "https://autoscale.co.il";
-const CONTACT_EMAIL = "info@autoscale.co.il";
-
-// Init Supabase
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// ─── Pre-made messages ───
-const PREMADE=[
-  {id:"p1",label:"👋 פתיחה",text:"היי {name},\nאשמח לעזור! איך אפשר לסייע?"},
-  {id:"p2",label:"📋 הצעת מחיר",text:"היי {name} 👋\nהצעת המחיר מוכנה\nאם יש שאלות או משהו לא ברור - אני כאן."},
-  {id:"p3",label:"🔔 תזכורת",text:"היי {name} 🔔\nבעוד 10 דקות מתחילים.\nנתראה!"},
-  {id:"p4",label:"📎 קישור",text:"היי {name},\nמצרף/ה את הקישור:\n[הכנס קישור]\n\nאם יש שאלות - אני כאן."},
-  {id:"p5",label:"🙏 תודה",text:"היי {name},\nתודה רבה על השיחה!\nאני זמין/ה לכל שאלה."},
-  {id:"p6",label:"⏰ פולו-אפ",text:"היי {name},\nראיתי שעיינת בהצעה ועדיין לא התקדמנו.\nיש משהו שדרוש הבהרה או שינוי?\nאשמח לעזור!"},
+const STATUSES=[{key:"חדש",label:"חדש",color:"#4ECDC4",icon:"🆕"},{key:"בטיפול",label:"בטיפול",color:"#E8B931",icon:"⏳"},{key:"טופל",label:"טופל",color:"#25D366",icon:"✅"}];
+const DEFAULT_TEMPLATES=[
+  {id:"t1",label:"👋 פתיחה",text:"היי {name},\nאשמח לעזור! איך אפשר לסייע?"},
+  {id:"t2",label:"📋 הצעת מחיר",text:"היי {name} 👋\nהצעת המחיר מוכנה\nאם יש שאלות או משהו לא ברור - אני כאן."},
+  {id:"t3",label:"🔔 תזכורת",text:"היי {name} 🔔\nבעוד 10 דקות מתחילים.\nנתראה!"},
+  {id:"t4",label:"📎 קישור",text:"היי {name},\nמצרף/ה את הקישור:\n[הכנס קישור]\n\nאם יש שאלות - אני כאן."},
+  {id:"t5",label:"🙏 תודה",text:"היי {name},\nתודה רבה על השיחה!\nאני זמין/ה לכל שאלה."},
+  {id:"t6",label:"⏰ פולו-אפ",text:"היי {name},\nראיתי שעיינת בהצעה ועדיין לא התקדמנו.\nיש משהו שדרוש הבהרה או שינוי?\nאשמח לעזור!"},
 ];
+const DEFAULT_TAGS=[{name:"VIP",color:"#E8B931"},{name:"ליד",color:"#4ECDC4"},{name:"לקוח פעיל",color:"#25D366"},{name:"ממתין",color:"#F97316"},{name:"סגור",color:"#EF4444"}];
 
-// ─── Icons ───
+// ── Icons ──
 function Stat({s,sz=14}){
   if(s==="sent")return<svg width={sz} height={sz} viewBox="0 0 20 20" fill="none"><path d="M5 10l3 3 7-7" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>;
   if(s==="delivered")return<svg width={sz} height={sz} viewBox="0 0 20 20" fill="none"><path d="M3 10l3 3 7-7" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M8 10l3 3 7-7" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>;
@@ -61,426 +65,535 @@ function Stat({s,sz=14}){
   return null;
 }
 
-// ─── Helpers ───
-function timeAgo(d){const now=new Date(),dt=new Date(d),s=Math.floor((now-dt)/1000);if(s<60)return"עכשיו";if(s<3600)return`${Math.floor(s/60)} ד׳`;if(s<86400)return`${Math.floor(s/3600)} ש׳`;if(s<604800)return`${Math.floor(s/86400)} י׳`;return dt.toLocaleDateString("he-IL")}
+// ── Helpers ──
+function timeAgo(d){const n=new Date(),dt=new Date(d),s=Math.floor((n-dt)/1000);if(s<60)return"עכשיו";if(s<3600)return`${Math.floor(s/60)} ד׳`;if(s<86400)return`${Math.floor(s/3600)} ש׳`;if(s<604800)return`${Math.floor(s/86400)} י׳`;return dt.toLocaleDateString("he-IL")}
 function fmtTime(d){return new Date(d).toLocaleTimeString("he-IL",{hour:"2-digit",minute:"2-digit"})}
 function fmtDate(d){const dt=new Date(d),t=new Date(),y=new Date(t);y.setDate(y.getDate()-1);if(dt.toDateString()===t.toDateString())return"היום";if(dt.toDateString()===y.toDateString())return"אתמול";return dt.toLocaleDateString("he-IL",{day:"numeric",month:"short",year:"numeric"})}
 const CLR=["#E8B931","#4ECDC4","#FF6B6B","#A78BFA","#F97316","#06B6D4","#EC4899","#84CC16","#F43F5E","#8B5CF6"];
 function clr(n){let h=0;for(let i=0;i<n.length;i++)h=n.charCodeAt(i)+((h<<5)-h);return CLR[Math.abs(h)%CLR.length]}
 function winInfo(msgs){const inc=msgs.filter(m=>m.direction==="in");if(!inc.length)return{open:false,remaining:0};const last=inc[inc.length-1],t=new Date(last.created_at),rem=24*60*60*1000-(new Date()-t);return{open:rem>0,remaining:Math.max(0,rem)}}
 function fmtRem(ms){const h=Math.floor(ms/(1000*60*60)),m=Math.floor((ms%(1000*60*60))/(1000*60));return h>0?`${h}:${String(m).padStart(2,'0')} שעות`:`${m} דקות`}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 
-function buildContacts(msgs){
+function buildContacts(msgs,meta={}){
   const m={};
-  msgs.forEach(x=>{if(!m[x.number])m[x.number]={name:x.name,number:x.number,messages:[],unread:0};m[x.number].messages.push(x);if(x.direction==="in")m[x.number].unread++});
-  return Object.values(m).map(c=>{c.messages.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));c.lastMessage=c.messages[c.messages.length-1];c.lastTime=c.lastMessage.created_at;c.window=winInfo(c.messages);return c}).sort((a,b)=>new Date(b.lastTime)-new Date(a.lastTime))
+  msgs.forEach(x=>{if(!m[x.number])m[x.number]={name:x.name,number:x.number,messages:[],unread:0,tags:[],profile_pic:"",display_name:"",handleStatus:"חדש"};m[x.number].messages.push(x);if(x.direction==="in")m[x.number].unread++});
+  return Object.values(m).map(c=>{
+    c.messages.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+    c.lastMessage=c.messages[c.messages.length-1];c.lastTime=c.lastMessage.created_at;
+    c.window=winInfo(c.messages);c.failedCount=c.messages.filter(m=>m.status==="failed").length;
+    const mt=meta[c.number];if(mt){c.tags=mt.tags||[];c.profile_pic=mt.profile_pic||"";c.display_name=mt.display_name||"";c.handleStatus=mt.handleStatus||"חדש"}
+    return c;
+  }).sort((a,b)=>new Date(b.lastTime)-new Date(a.lastTime));
 }
-
 function groupByDate(msgs){const g=[];let cur=null;msgs.forEach(m=>{const d=new Date(m.created_at).toDateString();if(d!==cur){cur=d;g.push({type:"date",label:fmtDate(m.created_at)})}g.push({type:"message",data:m})});return g}
 
-// ══════════════════════════════
-//  LOGIN PAGE
-// ══════════════════════════════
-function LoginPage({ onLogin }) {
-  const [email, setEmail] = React.useState("");
-  const [pass, setPass] = React.useState("");
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState("");
-
-  async function handleLogin(e) {
-    e.preventDefault();
-    setLoading(true); setError("");
-    const { data, error: err } = await supabase.auth.signInWithPassword({ email, password: pass });
-    if (err) { setError(err.message); setLoading(false); return; }
-    onLogin(data.user);
-  }
-
-  return (
-    <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#0A0C0F",padding:20}}>
-      <div style={{width:"100%",maxWidth:360,animation:"fadeUp 0.4s ease-out"}}>
-        <div style={{textAlign:"center",marginBottom:40}}>
-          <div style={{fontSize:36,fontWeight:700,color:"#F5F5F5",marginBottom:4}}>⚡ Autoscale</div>
-          <div style={{fontSize:14,color:"#25D366",fontWeight:500}}>WhatsApp · דונה</div>
-        </div>
-        <form onSubmit={handleLogin}>
-          <div style={{marginBottom:14}}>
-            <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="אימייל" required dir="ltr"
-              style={{width:"100%",padding:"14px 16px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,color:"#E5E5E5",fontSize:15,fontFamily:"'Rubik',system-ui"}}/>
-          </div>
-          <div style={{marginBottom:20}}>
-            <input type="password" value={pass} onChange={e=>setPass(e.target.value)} placeholder="סיסמה" required dir="ltr"
-              style={{width:"100%",padding:"14px 16px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:14,color:"#E5E5E5",fontSize:15,fontFamily:"'Rubik',system-ui"}}/>
-          </div>
-          {error && <div style={{color:"#EF4444",fontSize:13,marginBottom:14,textAlign:"center"}}>{error}</div>}
-          <button type="submit" disabled={loading}
-            style={{width:"100%",padding:"14px",background:"linear-gradient(135deg,#25D366,#128C7E)",border:"none",borderRadius:14,color:"#fff",fontSize:16,fontWeight:600,cursor:"pointer",fontFamily:"'Rubik',system-ui",opacity:loading?0.6:1}}>
-            {loading?"מתחבר...":"התחבר"}
-          </button>
-        </form>
-        <div style={{textAlign:"center",marginTop:30}}>
-          <a href={WEBSITE_URL} target="_blank" style={{fontSize:11,color:"#444"}}>נבנה ע״י AutoScale ⚡ אוטומציות חכמות</a>
-        </div>
-      </div>
-    </div>
-  );
+// ── Shared Components ──
+function Av({name,pic,size=50,radius=15,fontSize=21}){
+  if(pic)return<img src={pic} style={{width:size,height:size,borderRadius:radius,objectFit:"cover"}} alt=""/>;
+  return<div style={{width:size,height:size,borderRadius:radius,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:600,fontSize,color:"#fff",backgroundColor:clr(name),flexShrink:0}}>{name.charAt(0)}</div>;
+}
+function TagPill({name,color,small,onRemove}){
+  return<span style={{display:"inline-flex",alignItems:"center",gap:3,fontSize:small?9:11,fontWeight:500,color,background:color+"18",border:`1px solid ${color}30`,borderRadius:6,padding:small?"1px 5px":"2px 8px",whiteSpace:"nowrap"}}>
+    {name}{onRemove&&<button onClick={e=>{e.stopPropagation();onRemove()}} style={{background:"none",border:"none",color:color+"99",cursor:"pointer",fontSize:9,padding:0}}>✕</button>}
+  </span>;
+}
+function StatusBadge({status,small}){
+  const s=STATUSES.find(x=>x.key===status)||STATUSES[0];
+  return<span style={{fontSize:small?9:10,fontWeight:600,color:s.color,background:s.color+"15",border:`1px solid ${s.color}25`,borderRadius:5,padding:small?"1px 5px":"2px 7px",whiteSpace:"nowrap"}}>{s.icon} {s.label}</span>;
 }
 
-// ══════════════════════════════
-//  SETTINGS PAGE
-// ══════════════════════════════
-function SettingsPage({ messages, onClose, user, onLogout }) {
-  const [tab, setTab] = React.useState("costs");
-  const [changingPass, setChangingPass] = React.useState(false);
-  const [newPass, setNewPass] = React.useState("");
-  const [passMsg, setPassMsg] = React.useState("");
-  const out = messages.filter(m=>m.direction==="out");
-  const total = (out.length*COST_PER_MSG).toFixed(2);
+// ══════ LOGIN ══════
+function LoginPage({onLogin}){
+  const[email,setEmail]=React.useState("");const[pass,setPass]=React.useState("");const[loading,setLoading]=React.useState(false);const[error,setError]=React.useState("");
+  async function go(e){e.preventDefault();setLoading(true);setError("");const{data,error:err}=await sb.auth.signInWithPassword({email,password:pass});if(err){setError(err.message);setLoading(false);return}onLogin(data.user)}
+  return<div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#0A0C0F",padding:20}}>
+    <div style={{width:"100%",maxWidth:360,animation:"fadeUp 0.4s ease-out"}}>
+      <div style={{textAlign:"center",marginBottom:40}}><div style={{fontSize:36,fontWeight:700,color:"#F5F5F5",marginBottom:4}}>⚡ Autoscale</div><div style={{fontSize:14,color:"#25D366",fontWeight:500}}>WhatsApp · דונה</div></div>
+      <form onSubmit={go}>
+        <input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="אימייל" required dir="ltr" style={{...S.fieldInput,marginBottom:14}}/>
+        <input type="password" value={pass} onChange={e=>setPass(e.target.value)} placeholder="סיסמה" required dir="ltr" style={{...S.fieldInput,marginBottom:20}}/>
+        {error&&<div style={{color:"#EF4444",fontSize:13,marginBottom:14,textAlign:"center",animation:"shake 0.4s"}}>{error}</div>}
+        <button type="submit" disabled={loading} style={{width:"100%",padding:14,background:"linear-gradient(135deg,#25D366,#128C7E)",border:"none",borderRadius:14,color:"#fff",fontSize:16,fontWeight:600,cursor:"pointer",fontFamily:"inherit",opacity:loading?0.6:1}}>{loading?"מתחבר...":"התחבר"}</button>
+      </form>
+      <div style={{textAlign:"center",marginTop:30}}><a href={WEBSITE} target="_blank" style={{fontSize:11,color:"#444"}}>נבנה ע״י AutoScale ⚡ אוטומציות חכמות</a></div>
+    </div>
+  </div>;
+}
+
+// ══════ CONTACT DETAIL ══════
+function ContactDetail({contact,tags:allTags,onClose,onSave,onDelete}){
+  const[dn,setDn]=React.useState(contact.display_name||contact.name);
+  const[pic,setPic]=React.useState(contact.profile_pic||"");
+  const[cTags,setCTags]=React.useState(contact.tags||[]);
+  const[status,setStatus]=React.useState(contact.handleStatus||"חדש");
+  const[confirm,setConfirm]=React.useState(false);
+  function toggleTag(t){setCTags(p=>p.includes(t)?p.filter(x=>x!==t):[...p,t])}
+  return<div style={{...S.shell,animation:"slideIn 0.2s ease-out"}}>
+    <div style={S.detailHead}>
+      <button onClick={onClose} style={S.backBtn}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="m15 18-6-6 6-6"/></svg></button>
+      <span style={{fontSize:16,fontWeight:600,color:"#F0F0F0"}}>פרטי איש קשר</span>
+      <button onClick={()=>onSave({display_name:dn,profile_pic:pic,tags:cTags,handleStatus:status})} style={S.saveBtn}>שמור</button>
+    </div>
+    <div style={{padding:20,flex:1,overflow:"auto"}}>
+      <div style={{textAlign:"center",marginBottom:24}}>
+        <div style={{display:"inline-block",marginBottom:12}}><Av name={dn} pic={pic} size={80} radius={24} fontSize={32}/></div>
+        <div style={{fontSize:13,color:"#555",fontFamily:"monospace"}}>{contact.number}</div>
+      </div>
+
+      <div style={S.fieldGroup}><label style={S.fieldLabel}>שם תצוגה</label><input value={dn} onChange={e=>setDn(e.target.value)} style={S.fieldInput} dir="rtl"/></div>
+      <div style={S.fieldGroup}><label style={S.fieldLabel}>תמונת פרופיל (URL)</label><input value={pic} onChange={e=>setPic(e.target.value)} placeholder="https://..." style={S.fieldInput} dir="ltr"/></div>
+
+      {/* Status */}
+      <div style={S.fieldGroup}>
+        <label style={S.fieldLabel}>סטטוס טיפול</label>
+        <div style={{display:"flex",gap:6,marginTop:6}}>
+          {STATUSES.map(st=><button key={st.key} onClick={()=>setStatus(st.key)} style={{...S.tagToggle,flex:1,textAlign:"center",background:status===st.key?st.color+"20":"rgba(255,255,255,0.03)",borderColor:status===st.key?st.color+"40":"rgba(255,255,255,0.05)",color:status===st.key?st.color:"#666"}}>{st.icon} {st.label}</button>)}
+        </div>
+      </div>
+
+      {/* Tags */}
+      <div style={S.fieldGroup}>
+        <label style={S.fieldLabel}>תגיות</label>
+        <div style={{display:"flex",flexWrap:"wrap",gap:6,marginTop:6}}>
+          {allTags.map(t=><button key={t.name} onClick={()=>toggleTag(t.name)} style={{...S.tagToggle,background:cTags.includes(t.name)?t.color+"20":"rgba(255,255,255,0.03)",borderColor:cTags.includes(t.name)?t.color+"40":"rgba(255,255,255,0.05)",color:cTags.includes(t.name)?t.color:"#666"}}>{cTags.includes(t.name)?"✓ ":""}{t.name}</button>)}
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginTop:24,marginBottom:24}}>
+        <div style={S.miniStat}><div style={{fontSize:18,fontWeight:700,color:"#F0F0F0"}}>{contact.messages.length}</div><div style={{fontSize:10,color:"#666"}}>הודעות</div></div>
+        <div style={S.miniStat}><div style={{fontSize:18,fontWeight:700,color:"#F0F0F0"}}>{contact.messages.filter(m=>m.direction==="in").length}</div><div style={{fontSize:10,color:"#666"}}>נכנסות</div></div>
+        <div style={S.miniStat}><div style={{fontSize:18,fontWeight:700,color:"#E8B931"}}>${(contact.messages.filter(m=>m.direction==="out").length*COST_PER_MSG).toFixed(2)}</div><div style={{fontSize:10,color:"#666"}}>עלות</div></div>
+      </div>
+
+      {!confirm?<button onClick={()=>setConfirm(true)} style={{...S.actionBtn,borderColor:"rgba(239,68,68,0.15)",color:"#EF4444"}}>🗑 מחק צ׳אט</button>
+      :<button onClick={()=>{onDelete();setConfirm(false)}} style={{...S.actionBtn,background:"rgba(239,68,68,0.1)",borderColor:"rgba(239,68,68,0.3)",color:"#EF4444",fontWeight:600}}>⚠ לחץ שוב לאישור מחיקה</button>}
+    </div>
+  </div>;
+}
+
+// ══════ SETTINGS ══════
+function SettingsPage({messages,onClose,user,onLogout,tags,onAddTag,onDeleteTag,templates,onSetTemplates}){
+  const[tab,setTab]=React.useState("templates");
+  const[newTag,setNewTag]=React.useState("");const[newColor,setNewColor]=React.useState("#4ECDC4");
+  const[changingPass,setChangingPass]=React.useState(false);const[newPass,setNewPass]=React.useState("");const[passMsg,setPassMsg]=React.useState("");
+  const[editingTpl,setEditingTpl]=React.useState(null);
+  const[tplLabel,setTplLabel]=React.useState("");const[tplText,setTplText]=React.useState("");
+
+  const out=messages.filter(m=>m.direction==="out");const total=(out.length*COST_PER_MSG).toFixed(2);
   const byMonth={};out.forEach(m=>{const d=new Date(m.created_at),k=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;if(!byMonth[k])byMonth[k]={count:0,cost:0};byMonth[k].count++;byMonth[k].cost+=COST_PER_MSG});
-  const byContact={};out.forEach(m=>{if(!byContact[m.name])byContact[m.name]={count:0,cost:0};byContact[m.name].count++;byContact[m.name].cost+=COST_PER_MSG});
 
-  async function changePassword(){
-    if(!newPass||newPass.length<6){setPassMsg("סיסמה חייבת להכיל לפחות 6 תווים");return}
-    const{error}=await supabase.auth.updateUser({password:newPass});
-    if(error){setPassMsg(error.message)}else{setPassMsg("✓ סיסמה עודכנה בהצלחה");setNewPass("");setTimeout(()=>{setChangingPass(false);setPassMsg("")},2000)}
+  async function changePassword(){if(!newPass||newPass.length<6){setPassMsg("לפחות 6 תווים");return}const{error}=await sb.auth.updateUser({password:newPass});if(error)setPassMsg(error.message);else{setPassMsg("✓ עודכן");setNewPass("");setTimeout(()=>{setChangingPass(false);setPassMsg("")},2000)}}
+
+  function startAddTpl(){setEditingTpl("new");setTplLabel("");setTplText("")}
+  function startEditTpl(t){setEditingTpl(t.id);setTplLabel(t.label);setTplText(t.text)}
+  function saveTpl(){
+    if(!tplLabel.trim()||!tplText.trim())return;
+    if(editingTpl==="new"){onSetTemplates([...templates,{id:uid(),label:tplLabel,text:tplText}])}
+    else{onSetTemplates(templates.map(t=>t.id===editingTpl?{...t,label:tplLabel,text:tplText}:t))}
+    setEditingTpl(null);
   }
+  function deleteTpl(id){onSetTemplates(templates.filter(t=>t.id!==id))}
 
-  return(
-    <div style={S.shell}>
-      <div style={S.settingsHead}>
-        <button onClick={onClose} style={S.backBtn}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="m15 18-6-6 6-6"/></svg></button>
-        <div style={{fontSize:18,fontWeight:700,color:"#F0F0F0"}}>הגדרות</div>
-        <div style={{width:30}}/>
-      </div>
-      <div style={S.sTabs}>
-        {[["costs","💰 עלויות"],["account","👤 חשבון"],["about","ℹ️ אודות"]].map(([k,l])=>(
-          <button key={k} onClick={()=>setTab(k)} style={{...S.sTab,...(tab===k?S.sTabActive:{})}}>{l}</button>
-        ))}
-      </div>
-      <div style={{flex:1,overflow:"auto",padding:"0 0 40px"}}>
-        {tab==="costs"&&(
-          <div style={{padding:16}}>
-            <div style={S.costGrid}>
-              <div style={S.costCard}><div style={S.costLabel}>סה״כ הודעות</div><div style={S.costValue}>{out.length}</div></div>
-              <div style={S.costCard}><div style={S.costLabel}>עלות כוללת</div><div style={{...S.costValue,color:"#E8B931"}}>${total}</div></div>
-              <div style={S.costCard}><div style={S.costLabel}>עלות להודעה</div><div style={S.costValue}>${COST_PER_MSG}</div></div>
-              <div style={S.costCard}><div style={S.costLabel}>אנשי קשר</div><div style={S.costValue}>{Object.keys(byContact).length}</div></div>
-            </div>
-            <div style={S.costSection}><div style={S.costSectionTitle}>לפי חודש</div>
-              {Object.entries(byMonth).sort((a,b)=>b[0].localeCompare(a[0])).map(([month,data])=>(
-                <div key={month} style={S.costRow}><span style={{color:"#aaa",fontSize:14}}>{month}</span><div style={{display:"flex",gap:16,alignItems:"center"}}><span style={{color:"#666",fontSize:13}}>{data.count} הודעות</span><span style={{color:"#E8B931",fontWeight:600,fontSize:14}}>${data.cost.toFixed(2)}</span></div></div>
-              ))}
-            </div>
-            <div style={S.costSection}><div style={S.costSectionTitle}>לפי איש קשר</div>
-              {Object.entries(byContact).sort((a,b)=>b[1].count-a[1].count).map(([name,data])=>(
-                <div key={name} style={S.costRow}><div style={{display:"flex",alignItems:"center",gap:8}}><div style={{width:28,height:28,borderRadius:8,backgroundColor:clr(name),display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:600,color:"#fff"}}>{name.charAt(0)}</div><span style={{color:"#aaa",fontSize:14}}>{name}</span></div><div style={{display:"flex",gap:16,alignItems:"center"}}><span style={{color:"#666",fontSize:13}}>{data.count}</span><span style={{color:"#E8B931",fontWeight:600,fontSize:14}}>${data.cost.toFixed(2)}</span></div></div>
-              ))}
-            </div>
+  const tagColors=["#E8B931","#4ECDC4","#FF6B6B","#A78BFA","#F97316","#06B6D4","#EC4899","#84CC16","#25D366","#EF4444"];
+
+  return<div style={S.shell}>
+    <div style={S.detailHead}>
+      <button onClick={onClose} style={S.backBtn}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="m15 18-6-6 6-6"/></svg></button>
+      <div style={{fontSize:18,fontWeight:700,color:"#F0F0F0"}}>הגדרות</div><div style={{width:30}}/>
+    </div>
+    <div style={S.sTabs}>
+      {[["templates","📝 תבניות"],["tags","🏷 תגיות"],["costs","💰 עלויות"],["account","👤 חשבון"]].map(([k,l])=>
+        <button key={k} onClick={()=>setTab(k)} style={{...S.sTab,...(tab===k?S.sTabActive:{})}}>{l}</button>
+      )}
+    </div>
+    <div style={{flex:1,overflow:"auto",padding:"0 0 40px"}}>
+
+      {/* Templates */}
+      {tab==="templates"&&<div style={{padding:16}}>
+        {editingTpl?<div style={{animation:"fadeUp 0.2s"}}>
+          <div style={{fontSize:14,fontWeight:600,color:"#ccc",marginBottom:12}}>{editingTpl==="new"?"הוסף תבנית":"ערוך תבנית"}</div>
+          <div style={S.fieldGroup}><label style={S.fieldLabel}>שם / אייקון</label><input value={tplLabel} onChange={e=>setTplLabel(e.target.value)} style={S.fieldInput} dir="rtl" placeholder="👋 פתיחה"/></div>
+          <div style={S.fieldGroup}><label style={S.fieldLabel}>תוכן ההודעה <span style={{color:"#555"}}>(השתמש ב-{"{name}"} לשם הלקוח)</span></label>
+            <textarea value={tplText} onChange={e=>setTplText(e.target.value)} style={{...S.fieldInput,minHeight:100,resize:"vertical"}} dir="rtl" rows={4} placeholder={"היי {name},\nמה שלומך?"}/>
           </div>
-        )}
-        {tab==="account"&&(
-          <div style={{padding:16}}>
-            <div style={S.accountItem} onClick={()=>setChangingPass(!changingPass)}>
-              <div style={S.accountIcon}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-              <div style={{flex:1}}><div style={{fontSize:14,fontWeight:500,color:"#ddd"}}>שינוי סיסמה</div><div style={{fontSize:12,color:"#666",marginTop:2}}>{user?.email}</div></div>
-            </div>
-            {changingPass&&(
-              <div style={{padding:"12px 0",animation:"fadeUp 0.2s ease-out"}}>
-                <input type="password" value={newPass} onChange={e=>setNewPass(e.target.value)} placeholder="סיסמה חדשה" dir="ltr" style={{width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:12,color:"#E5E5E5",fontSize:14,fontFamily:"'Rubik',system-ui",marginBottom:10}}/>
-                {passMsg&&<div style={{fontSize:12,color:passMsg.startsWith("✓")?"#25D366":"#EF4444",marginBottom:10}}>{passMsg}</div>}
-                <button onClick={changePassword} style={{padding:"10px 20px",background:"linear-gradient(135deg,#25D366,#128C7E)",border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'Rubik',system-ui"}}>עדכן סיסמה</button>
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={()=>setEditingTpl(null)} style={{...S.actionBtn,flex:1,justifyContent:"center"}}>ביטול</button>
+            <button onClick={saveTpl} style={{...S.saveBtn,flex:1,padding:"12px",textAlign:"center"}}>💾 שמור</button>
+          </div>
+        </div>
+        :<>
+          <button onClick={startAddTpl} style={{...S.saveBtn,width:"100%",padding:"12px",marginBottom:16,textAlign:"center",fontSize:14}}>+ הוסף תבנית חדשה</button>
+          {templates.map(t=><div key={t.id} style={{padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.03)"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+              <span style={{fontSize:14,fontWeight:500,color:"#ddd"}}>{t.label}</span>
+              <div style={{display:"flex",gap:6}}>
+                <button onClick={()=>startEditTpl(t)} style={S.pmEditBtn}>✏ ערוך</button>
+                <button onClick={()=>deleteTpl(t.id)} style={{...S.pmEditBtn,color:"#EF4444",borderColor:"rgba(239,68,68,0.15)"}}>🗑</button>
               </div>
-            )}
-            <div style={{...S.accountItem,borderBottom:"none"}} onClick={onLogout}>
-              <div style={{...S.accountIcon,background:"rgba(239,68,68,0.08)"}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
-              <div style={{flex:1}}><div style={{fontSize:14,fontWeight:500,color:"#EF4444"}}>התנתקות</div></div>
             </div>
-          </div>
+            <div style={{fontSize:12,color:"#555",whiteSpace:"pre-wrap",maxHeight:40,overflow:"hidden"}} dir="rtl">{t.text}</div>
+          </div>)}
+          {templates.length===0&&<div style={{color:"#555",fontSize:13,padding:30,textAlign:"center"}}>אין תבניות</div>}
+        </>}
+      </div>}
+
+      {/* Tags */}
+      {tab==="tags"&&<div style={{padding:16}}>
+        <div style={{display:"flex",gap:8,marginBottom:10}}>
+          <input value={newTag} onChange={e=>setNewTag(e.target.value)} placeholder="תגית חדשה..." style={{...S.fieldInput,flex:1}} dir="rtl"/>
+          <button onClick={()=>{if(newTag.trim()){onAddTag(newTag.trim(),newColor);setNewTag("")}}} style={{...S.saveBtn,padding:"10px 16px"}}>הוסף</button>
+        </div>
+        <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:16}}>
+          {tagColors.map(c=><button key={c} onClick={()=>setNewColor(c)} style={{width:26,height:26,borderRadius:7,backgroundColor:c,border:newColor===c?"2px solid #fff":"2px solid transparent",cursor:"pointer"}}/>)}
+        </div>
+        {tags.map(t=><div key={t.name} style={{...S.costRow}}><TagPill name={t.name} color={t.color}/><button onClick={()=>onDeleteTag(t.name)} style={{background:"none",border:"none",color:"#555",cursor:"pointer",fontSize:13}}>🗑</button></div>)}
+      </div>}
+
+      {/* Costs */}
+      {tab==="costs"&&<div style={{padding:16}}>
+        <div style={S.costGrid}>
+          <div style={S.costCard}><div style={S.costLabel}>הודעות יוצאות</div><div style={S.costValue}>{out.length}</div></div>
+          <div style={S.costCard}><div style={S.costLabel}>עלות כוללת</div><div style={{...S.costValue,color:"#E8B931"}}>${total}</div></div>
+        </div>
+        {Object.entries(byMonth).sort((a,b)=>b[0].localeCompare(a[0])).map(([mo,d])=>
+          <div key={mo} style={S.costRow}><span style={{color:"#aaa",fontSize:14}}>{mo}</span><div style={{display:"flex",gap:16,alignItems:"center"}}><span style={{color:"#666",fontSize:13}}>{d.count}</span><span style={{color:"#E8B931",fontWeight:600}}>${d.cost.toFixed(2)}</span></div></div>
         )}
-        {tab==="about"&&(
-          <div style={{padding:"30px 20px",textAlign:"center"}}>
-            <div style={{fontSize:28,fontWeight:700,color:"#F5F5F5",marginBottom:4}}>⚡ Autoscale</div>
-            <div style={{fontSize:14,color:"#25D366",fontWeight:500,marginBottom:20}}>WhatsApp · דונה</div>
-            <div style={{fontSize:13,color:"#777",lineHeight:1.7,marginBottom:24}}>מערכת ניהול הודעות WhatsApp חכמה<br/>שליחה, מעקב ותגובות במקום אחד</div>
-            <div style={{fontSize:12,color:"#555",marginBottom:30}}>גרסה 1.0.0</div>
-            <a href={WEBSITE_URL} target="_blank" rel="noopener" style={{display:"block",padding:"10px 20px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.04)",borderRadius:10,color:"#999",fontSize:13,marginBottom:8,textAlign:"center"}}>🌐 autoscale.co.il</a>
-            <a href={"mailto:"+CONTACT_EMAIL} style={{display:"block",padding:"10px 20px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.04)",borderRadius:10,color:"#999",fontSize:13,textAlign:"center"}}>✉ {CONTACT_EMAIL}</a>
-          </div>
-        )}
-      </div>
+      </div>}
+
+      {/* Account */}
+      {tab==="account"&&<div style={{padding:16}}>
+        <div style={S.accountItem} onClick={()=>setChangingPass(!changingPass)}>
+          <div style={S.accountIcon}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <div style={{flex:1}}><div style={{fontSize:14,fontWeight:500,color:"#ddd"}}>שינוי סיסמה</div><div style={{fontSize:12,color:"#666",marginTop:2}}>{user?.email}</div></div>
+        </div>
+        {changingPass&&<div style={{padding:"12px 0",animation:"fadeUp 0.2s"}}>
+          <input type="password" value={newPass} onChange={e=>setNewPass(e.target.value)} placeholder="סיסמה חדשה" dir="ltr" style={{...S.fieldInput,marginBottom:10}}/>
+          {passMsg&&<div style={{fontSize:12,color:passMsg.startsWith("✓")?"#25D366":"#EF4444",marginBottom:10}}>{passMsg}</div>}
+          <button onClick={changePassword} style={{...S.saveBtn,padding:"10px 20px"}}>עדכן</button>
+        </div>}
+        <div style={{...S.accountItem,borderBottom:"none"}} onClick={onLogout}>
+          <div style={{...S.accountIcon,background:"rgba(239,68,68,0.08)"}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></div>
+          <div style={{flex:1}}><div style={{fontSize:14,fontWeight:500,color:"#EF4444"}}>התנתקות</div></div>
+        </div>
+        <div style={{marginTop:30,textAlign:"center"}}>
+          <div style={{fontSize:12,color:"#333"}}>Autoscale WhatsApp · v1.2.0</div>
+          <a href={WEBSITE} target="_blank" style={{fontSize:11,color:"#444",display:"block",marginTop:6}}>autoscale.co.il</a>
+        </div>
+      </div>}
     </div>
-  );
+  </div>;
 }
 
-// ══════════════════════════════
-//  FOOTER
-// ══════════════════════════════
-function Footer(){
-  return(
-    <div style={S.footer}>
-      <div style={{width:40,height:1,background:"rgba(255,255,255,0.04)",marginBottom:8}}/>
-      <a href={WEBSITE_URL} target="_blank" rel="noopener" style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
-        <span style={{fontSize:11,color:"#444"}}>נבנה ע״י</span>
-        <span style={{fontSize:13,fontWeight:600,color:"#888"}}>⚡ AutoScale</span>
-        <span style={{fontSize:11,color:"#555"}}>אוטומציות חכמות</span>
-      </a>
-      <a href={"mailto:"+CONTACT_EMAIL} style={{fontSize:11,color:"#444"}}>{CONTACT_EMAIL}</a>
-      <button style={S.referralBtn} onClick={()=>alert("קישור הפניה הועתק! שתף עם חבר וקבל חודש חינם 🎁")}>🎁 המלץ וקבל חודש חינם</button>
-    </div>
-  );
-}
+// ══════ FOOTER ══════
+function Footer(){return<div style={S.footer}>
+  <div style={{width:40,height:1,background:"rgba(255,255,255,0.04)",marginBottom:8}}/>
+  <a href={WEBSITE} target="_blank" rel="noopener" style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
+    <span style={{fontSize:11,color:"#444"}}>נבנה ע״י</span><span style={{fontSize:13,fontWeight:600,color:"#888"}}>⚡ AutoScale</span><span style={{fontSize:11,color:"#555"}}>אוטומציות חכמות</span>
+  </a>
+  <a href={"mailto:"+EMAIL_ADDR} style={{fontSize:11,color:"#444"}}>{EMAIL_ADDR}</a>
+  <button style={S.referralBtn} onClick={()=>alert("קישור הפניה הועתק! שתף עם חבר וקבל חודש חינם 🎁")}>🎁 המלץ וקבל חודש חינם</button>
+</div>}
 
-// ══════════════════════════════
-//  MAIN APP
-// ══════════════════════════════
+// ══════ MAIN APP ══════
 function App(){
-  const [user, setUser] = React.useState(null);
-  const [loading, setLoading] = React.useState(true);
-  const [messages, setMessages] = React.useState([]);
-  const [view, setView] = React.useState("contacts");
-  const [activeChat, setActiveChat] = React.useState(null);
-  const [replyText, setReplyText] = React.useState("");
-  const [sending, setSending] = React.useState(false);
-  const [search, setSearch] = React.useState("");
-  const [showSent, setShowSent] = React.useState(false);
-  const [showPremade, setShowPremade] = React.useState(false);
-  const chatEndRef = React.useRef(null);
-  const inputRef = React.useRef(null);
+  const[user,setUser]=React.useState(null);
+  const[loading,setLoading]=React.useState(true);
+  const[messages,setMessages]=React.useState([]);
+  const[meta,setMeta]=React.useState({});
+  const[tags,setTags]=React.useState(DEFAULT_TAGS);
+  const[templates,setTemplates]=React.useState(DEFAULT_TEMPLATES);
+  const[view,setView]=React.useState("contacts");
+  const[activeChat,setActiveChat]=React.useState(null);
+  const[showDetail,setShowDetail]=React.useState(false);
+  const[replyText,setReplyText]=React.useState("");
+  const[sending,setSending]=React.useState(false);
+  const[search,setSearch]=React.useState("");
+  const[showSent,setShowSent]=React.useState(false);
+  const[showPremade,setShowPremade]=React.useState(false);
+  const[statusFilter,setStatusFilter]=React.useState("all");
+  const[selectMode,setSelectMode]=React.useState(false);
+  const[selected,setSelected]=React.useState(new Set());
+  const[bulkConfirm,setBulkConfirm]=React.useState(false);
+  const chatEndRef=React.useRef(null);
+  const inputRef=React.useRef(null);
 
-  // Check auth on load
+  // Auth
   React.useEffect(()=>{
-    supabase.auth.getSession().then(({data:{session}})=>{
-      if(session?.user) { setUser(session.user); fetchMessages(session.user.id); }
-      setLoading(false);
-    });
-    const{data:{subscription}}=supabase.auth.onAuthStateChange((event,session)=>{
-      if(session?.user){setUser(session.user)} else{setUser(null);setMessages([])}
-    });
+    sb.auth.getSession().then(({data:{session}})=>{if(session?.user){setUser(session.user);fetchMessages(session.user.id)}setLoading(false)});
+    const{data:{subscription}}=sb.auth.onAuthStateChange((_,session)=>{if(session?.user)setUser(session.user);else{setUser(null);setMessages([])}});
     return()=>subscription.unsubscribe();
   },[]);
 
-  // Realtime subscription
+  // Realtime
   React.useEffect(()=>{
-    if(!user) return;
-    const channel = supabase.channel('messages-realtime')
-      .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:`user_id=eq.${user.id}`},
-        (payload)=>{ setMessages(prev=>[...prev,payload.new]) }
-      )
-      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'messages',filter:`user_id=eq.${user.id}`},
-        (payload)=>{ setMessages(prev=>prev.map(m=>m.id===payload.new.id?payload.new:m)) }
-      )
+    if(!user)return;
+    const ch=sb.channel('msg-rt')
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:`user_id=eq.${user.id}`},p=>setMessages(prev=>[...prev,p.new]))
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'messages',filter:`user_id=eq.${user.id}`},p=>setMessages(prev=>prev.map(m=>m.id===p.new.id?p.new:m)))
       .subscribe();
-    return()=>supabase.removeChannel(channel);
+    return()=>sb.removeChannel(ch);
   },[user]);
 
-  async function fetchMessages(uid){
-    const{data,error}=await supabase.from('messages').select('*').eq('user_id',uid).order('created_at',{ascending:true});
-    if(data) setMessages(data);
+  async function fetchMessages(uid){const{data}=await sb.from('messages').select('*').eq('user_id',uid).order('created_at',{ascending:true});if(data)setMessages(data)}
+  async function handleLogout(){await sb.auth.signOut();setUser(null);setMessages([]);setView("contacts");setActiveChat(null)}
+
+  function updateMeta(number,updates){setMeta(prev=>({...prev,[number]:{...(prev[number]||{}),number,...updates}}))}
+  function addTag(n,c){if(!tags.find(t=>t.name===n))setTags(p=>[...p,{name:n,color:c}])}
+  function deleteTag(n){setTags(p=>p.filter(t=>t.name!==n))}
+
+  // Send read receipts when opening chat
+  function openChat(number){
+    setActiveChat(number);
+    const contact=contacts.find(c=>c.number===number);
+    if(contact&&READ_WEBHOOK){
+      const unreadIds=contact.messages.filter(m=>m.direction==="in"&&m.message_id).map(m=>m.message_id);
+      if(unreadIds.length){fetch(READ_WEBHOOK,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"read",number,message_ids:unreadIds})}).catch(()=>{})}
+    }
+    // Auto set status to בטיפול if חדש
+    if(contact){
+      const currentStatus=(meta[number]?.handleStatus)||"חדש";
+      if(currentStatus==="חדש")updateMeta(number,{handleStatus:"בטיפול"});
+    }
   }
 
-  async function handleLogout(){
-    await supabase.auth.signOut();
-    setUser(null); setMessages([]); setView("contacts"); setActiveChat(null);
-  }
-
-  const contacts=buildContacts(messages);
+  const contacts=buildContacts(messages,meta);
   const totalUnread=contacts.reduce((s,c)=>s+c.unread,0);
-  const filtered=contacts.filter(c=>{if(!search)return true;const q=search.toLowerCase();return c.name.toLowerCase().includes(q)||c.number.includes(q)});
+  const visibleContacts=contacts.filter(c=>{
+    if(statusFilter!=="all"&&c.handleStatus!==statusFilter)return false;
+    if(!search)return true;
+    const q=search.toLowerCase(),dn=(c.display_name||c.name).toLowerCase();
+    return dn.includes(q)||c.number.includes(q)||c.tags.some(t=>t.toLowerCase().includes(q));
+  });
+
   const ac=activeChat?contacts.find(c=>c.number===activeChat):null;
   const chatGroups=ac?groupByDate(ac.messages):[];
   const win=ac?ac.window:{open:false};
+  const displayName=ac?(ac.display_name||ac.name):"";
 
   React.useEffect(()=>{if(chatEndRef.current)chatEndRef.current.scrollIntoView({behavior:"smooth"})},[activeChat,messages]);
   React.useEffect(()=>{if(activeChat&&inputRef.current&&win.open)inputRef.current.focus()},[activeChat]);
 
   async function sendReply(text){
     const msg=text||replyText;if(!msg.trim()||!ac)return;setSending(true);
-    if(REPLY_WEBHOOK){try{await fetch(REPLY_WEBHOOK,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({number:ac.number,name:ac.name,message:msg.trim()})})}catch(e){console.error(e)}}
+    try{await fetch(REPLY_WEBHOOK,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({number:ac.number,name:displayName,message:msg.trim()})})}catch(e){console.error(e)}
+    // Auto-move to בטיפול
+    updateMeta(ac.number,{handleStatus:"בטיפול"});
     setShowSent(true);setTimeout(()=>setShowSent(false),2200);setSending(false);setReplyText("");setShowPremade(false);
   }
-  function insertPremade(pm){setReplyText(pm.text.replace(/\{name\}/g,ac?.name||""));setShowPremade(false);if(inputRef.current)inputRef.current.focus()}
+  async function resendMessage(msg){try{await fetch(REPLY_WEBHOOK,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({number:msg.number,name:msg.name,message:msg.message,resend_id:msg.message_id})})}catch(e){console.error(e)}}
+  function insertPremade(pm){setReplyText(pm.text.replace(/\{name\}/g,displayName));setShowPremade(false);if(inputRef.current)inputRef.current.focus()}
 
-  // Loading
-  if(loading) return <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#0A0C0F"}}><div style={{width:28,height:28,border:"3px solid rgba(37,211,102,0.2)",borderTopColor:"#25D366",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/></div>;
+  // Multi-select handlers
+  function toggleSelect(number){setSelected(prev=>{const n=new Set(prev);n.has(number)?n.delete(number):n.add(number);return n})}
+  function bulkSetStatus(status){selected.forEach(num=>updateMeta(num,{handleStatus:status}));setSelected(new Set());setSelectMode(false)}
+  function bulkDelete(){selected.forEach(num=>{/* would delete from supabase */});setSelected(new Set());setSelectMode(false);setBulkConfirm(false)}
 
-  // Login
-  if(!user) return <LoginPage onLogin={u=>{setUser(u);fetchMessages(u.id)}}/>;
-
-  // Settings
-  if(view==="settings") return <SettingsPage messages={messages} onClose={()=>setView("contacts")} user={user} onLogout={handleLogout}/>;
+  if(loading)return<div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#0A0C0F"}}><div style={{width:28,height:28,border:"3px solid rgba(37,211,102,0.2)",borderTopColor:"#25D366",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/></div>;
+  if(!user)return<LoginPage onLogin={u=>{setUser(u);fetchMessages(u.id)}}/>;
+  if(view==="settings")return<SettingsPage messages={messages} onClose={()=>setView("contacts")} user={user} onLogout={handleLogout} tags={tags} onAddTag={addTag} onDeleteTag={deleteTag} templates={templates} onSetTemplates={setTemplates}/>;
+  if(showDetail&&ac)return<ContactDetail contact={ac} tags={tags} onClose={()=>setShowDetail(false)} onSave={u=>{updateMeta(ac.number,u);setShowDetail(false)}} onDelete={()=>{setShowDetail(false);setActiveChat(null)}}/>;
 
   // ═══ CONTACTS ═══
   if(!activeChat){
-    return(
-      <div style={S.shell}>
-        <div style={S.header}>
-          <div style={S.headerInner}>
-            <div><div style={S.brand}><span style={{fontSize:18}}>⚡</span>Autoscale</div><div style={S.brandSub}>WhatsApp · דונה</div></div>
-            <div style={{display:"flex",alignItems:"center",gap:10}}>
-              {totalUnread>0&&<div style={S.unreadGlobal}>{totalUnread}</div>}
-              <button onClick={()=>setView("settings")} style={S.settingsBtn}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
-            </div>
+    const statusCounts={};contacts.forEach(c=>{const s=c.handleStatus;statusCounts[s]=(statusCounts[s]||0)+1});
+    return<div style={S.shell}>
+      <div style={S.header}>
+        <div style={S.headerInner}>
+          <div><div style={S.brand}><span style={{fontSize:18}}>⚡</span>Autoscale</div><div style={S.brandSub}>WhatsApp · דונה</div></div>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            {totalUnread>0&&<div style={S.unreadGlobal}>{totalUnread}</div>}
+            <button onClick={()=>setSelectMode(!selectMode)} style={{...S.settingsBtn,borderColor:selectMode?"rgba(37,211,102,0.3)":"rgba(255,255,255,0.05)",color:selectMode?"#25D366":"#777"}} title="בחירה מרובה">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </button>
+            <button onClick={()=>setView("settings")} style={S.settingsBtn}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></button>
           </div>
         </div>
-        <div style={{padding:"12px 16px 6px"}}><div style={S.searchBox}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#444" strokeWidth="2.5"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="text" placeholder="חיפוש..." value={search} onChange={e=>setSearch(e.target.value)} style={S.searchInput} dir="rtl"/>{search&&<button onClick={()=>setSearch("")} style={{background:"none",border:"none",color:"#444",cursor:"pointer",fontSize:13}}>✕</button>}</div></div>
-        <div style={{flex:1,overflow:"auto"}}>
-          {messages.length===0&&(
-            <div style={{textAlign:"center",padding:"60px 20px",color:"#555"}}>
-              <div style={{fontSize:40,marginBottom:16}}>📭</div>
-              <div style={{fontSize:15,fontWeight:500,color:"#777",marginBottom:8}}>אין הודעות עדיין</div>
-              <div style={{fontSize:13,color:"#555"}}>ברגע שהמערכת תתחיל לשלוח הודעות,<br/>הן יופיעו כאן</div>
-            </div>
-          )}
-          {filtered.map((c,i)=>{
-            const isOut=c.lastMessage.direction==="out";
-            return(
-              <div key={c.number} style={{...S.contactRow,animationDelay:`${i*35}ms`}} onClick={()=>setActiveChat(c.number)}>
-                <div style={{position:"relative",flexShrink:0}}>
-                  <div style={{...S.avatar,backgroundColor:clr(c.name)}}>{c.name.charAt(0)}</div>
-                  <div style={{position:"absolute",bottom:-1,right:-1,width:12,height:12,borderRadius:6,border:"2.5px solid #0A0C0F",backgroundColor:c.window.open?"#25D366":"#333",boxShadow:c.window.open?"0 0 6px rgba(37,211,102,0.5)":"none"}}/>
-                </div>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:5}}>
-                    <span style={{fontWeight:600,fontSize:15,color:"#F0F0F0"}}>{c.name}</span>
-                    <span style={{fontSize:12,color:c.unread>0?"#25D366":"#444"}}>{timeAgo(c.lastTime)}</span>
-                  </div>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                    <div style={{display:"flex",alignItems:"center",gap:4,flex:1,minWidth:0}}>
-                      {isOut&&<Stat s={c.lastMessage.status} sz={13}/>}
-                      <span style={{fontSize:13,color:"#666",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}} dir="rtl">{c.lastMessage.message.split("\n")[0].substring(0,42)}</span>
-                    </div>
-                    {c.unread>0&&<div style={S.badge}>{c.unread}</div>}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        <Footer/>
       </div>
-    );
+
+      {/* Status filter tabs */}
+      <div style={S.statusTabs}>
+        <button onClick={()=>setStatusFilter("all")} style={{...S.statusTab,...(statusFilter==="all"?{color:"#F0F0F0",borderBottomColor:"#F0F0F0"}:{})}}>הכל <span style={{fontSize:10,color:"#555"}}>{contacts.length}</span></button>
+        {STATUSES.map(st=><button key={st.key} onClick={()=>setStatusFilter(st.key)} style={{...S.statusTab,...(statusFilter===st.key?{color:st.color,borderBottomColor:st.color}:{})}}>{st.icon} {st.label} <span style={{fontSize:10,color:"#555"}}>{statusCounts[st.key]||0}</span></button>)}
+      </div>
+
+      <div style={{padding:"8px 16px 4px"}}><div style={S.searchBox}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#444" strokeWidth="2.5"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="text" placeholder="חיפוש..." value={search} onChange={e=>setSearch(e.target.value)} style={S.searchInput} dir="rtl"/>{search&&<button onClick={()=>setSearch("")} style={{background:"none",border:"none",color:"#444",cursor:"pointer",fontSize:13}}>✕</button>}</div></div>
+
+      {/* Bulk action bar */}
+      {selectMode&&selected.size>0&&<div style={S.bulkBar}>
+        <span style={{fontSize:13,color:"#ccc",fontWeight:500}}>{selected.size} נבחרו</span>
+        <div style={{display:"flex",gap:6}}>
+          {STATUSES.map(st=><button key={st.key} onClick={()=>bulkSetStatus(st.key)} style={{...S.bulkBtn,color:st.color,borderColor:st.color+"30"}}>{st.icon}</button>)}
+          {!bulkConfirm?<button onClick={()=>setBulkConfirm(true)} style={{...S.bulkBtn,color:"#EF4444",borderColor:"rgba(239,68,68,0.3)"}}>🗑</button>
+          :<button onClick={bulkDelete} style={{...S.bulkBtn,color:"#EF4444",background:"rgba(239,68,68,0.15)",borderColor:"rgba(239,68,68,0.4)"}}>⚠ אשר</button>}
+        </div>
+      </div>}
+
+      <div style={{flex:1,overflow:"auto"}}>
+        {messages.length===0&&<div style={{textAlign:"center",padding:"60px 20px",color:"#555"}}><div style={{fontSize:40,marginBottom:16}}>📭</div><div style={{fontSize:15,fontWeight:500,color:"#777"}}>אין הודעות עדיין</div></div>}
+        {visibleContacts.map((c,i)=>{
+          const isOut=c.lastMessage.direction==="out",dn=c.display_name||c.name,isSelected=selected.has(c.number);
+          return<div key={c.number} style={{...S.contactRow,animationDelay:`${i*25}ms`,background:isSelected?"rgba(37,211,102,0.06)":"transparent"}} onClick={()=>selectMode?toggleSelect(c.number):openChat(c.number)}>
+            {selectMode&&<div style={{...S.checkbox,borderColor:isSelected?"#25D366":"#444",background:isSelected?"#25D366":"transparent"}}>{isSelected&&<svg width="12" height="12" viewBox="0 0 20 20" fill="none"><path d="M5 10l3 3 7-7" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}</div>}
+            <div style={{position:"relative",flexShrink:0}}>
+              <Av name={dn} pic={c.profile_pic} size={48} radius={14} fontSize={20}/>
+              <div style={{position:"absolute",bottom:-1,right:-1,width:11,height:11,borderRadius:6,border:"2px solid #0A0C0F",backgroundColor:c.window.open?"#25D366":"#333"}}/>
+            </div>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  <span style={{fontWeight:600,fontSize:14,color:"#F0F0F0"}}>{dn}</span>
+                  <StatusBadge status={c.handleStatus} small/>
+                  {c.failedCount>0&&<span style={{fontSize:9,color:"#EF4444",fontWeight:600}}>⚠{c.failedCount}</span>}
+                </div>
+                <span style={{fontSize:11,color:c.unread>0?"#25D366":"#444"}}>{timeAgo(c.lastTime)}</span>
+              </div>
+              {c.tags.length>0&&<div style={{display:"flex",gap:3,marginBottom:3,flexWrap:"wrap"}}>{c.tags.slice(0,3).map(t=>{const tag=tags.find(x=>x.name===t);return<TagPill key={t} name={t} color={tag?.color||"#888"} small/>})}</div>}
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div style={{display:"flex",alignItems:"center",gap:4,flex:1,minWidth:0}}>
+                  {isOut&&<Stat s={c.lastMessage.status} sz={12}/>}
+                  <span style={{fontSize:12,color:"#555",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}} dir="rtl">{c.lastMessage.message.split("\n")[0].substring(0,38)}</span>
+                </div>
+                {c.unread>0&&<div style={S.badge}>{c.unread}</div>}
+              </div>
+            </div>
+          </div>;
+        })}
+      </div>
+      <Footer/>
+    </div>;
   }
 
   // ═══ CHAT ═══
-  return(
-    <div style={S.shell}>
-      <div style={S.chatHead}>
-        <button onClick={()=>{setActiveChat(null);setReplyText("");setShowPremade(false)}} style={S.backBtn}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="m15 18-6-6 6-6"/></svg></button>
-        <div style={{...S.avatar,width:40,height:40,fontSize:17,borderRadius:12,backgroundColor:clr(ac.name)}}>{ac.name.charAt(0)}</div>
-        <div style={{flex:1}}><div style={{fontWeight:600,fontSize:16,color:"#F0F0F0"}}>{ac.name}</div><div style={{fontSize:11,color:"#444",fontFamily:"monospace"}}>{ac.number}</div></div>
-        <div style={{display:"flex",alignItems:"center",gap:5,fontSize:11,fontWeight:600,padding:"4px 10px",borderRadius:8,border:"1px solid",background:win.open?"rgba(37,211,102,0.1)":"rgba(239,68,68,0.08)",color:win.open?"#25D366":"#EF4444",borderColor:win.open?"rgba(37,211,102,0.2)":"rgba(239,68,68,0.15)"}}>
-          <div style={{width:6,height:6,borderRadius:3,backgroundColor:win.open?"#25D366":"#EF4444"}}/>{win.open?"פתוח":"נעול"}
-        </div>
+  return<div style={S.shell}>
+    <div style={S.chatHead}>
+      <button onClick={()=>{setActiveChat(null);setReplyText("");setShowPremade(false)}} style={S.backBtn}><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="m15 18-6-6 6-6"/></svg></button>
+      <div onClick={()=>setShowDetail(true)} style={{display:"flex",alignItems:"center",gap:10,flex:1,cursor:"pointer"}}>
+        <Av name={displayName} pic={ac.profile_pic} size={38} radius={11} fontSize={16}/>
+        <div><div style={{fontWeight:600,fontSize:15,color:"#F0F0F0"}}>{displayName}</div><div style={{fontSize:10,color:"#444",fontFamily:"monospace"}}>{ac.number}</div></div>
       </div>
-
-      <div style={{padding:"7px 16px",borderBottom:"1px solid",background:win.open?"rgba(37,211,102,0.04)":"rgba(239,68,68,0.03)",borderBottomColor:win.open?"rgba(37,211,102,0.06)":"rgba(239,68,68,0.06)"}}>
-        <div style={{display:"flex",alignItems:"center",gap:8,fontSize:12,fontWeight:500}}>
-          {win.open?<><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#25D366" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span style={{color:"#8BC9A0"}}>נותרו {fmtRem(win.remaining)}</span><div style={{flex:1,height:3,background:"rgba(255,255,255,0.04)",borderRadius:2,overflow:"hidden",marginLeft:6}}><div style={{height:"100%",background:"linear-gradient(90deg,#128C7E,#25D366)",borderRadius:2,width:`${(win.remaining/(24*60*60*1000))*100}%`}}/></div></>
-          :<><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span style={{color:"#888"}}>נעול — ממתין לתשובת הלקוח</span></>}
-        </div>
-      </div>
-
-      <div style={{flex:1,overflow:"auto",padding:"14px 14px 150px",display:"flex",flexDirection:"column",gap:3,background:"#0A0C0F"}}>
-        {chatGroups.map((item,i)=>{
-          if(item.type==="date")return<div key={`d${i}`} style={{textAlign:"center",padding:"12px 0 6px"}}><span style={{fontSize:11,color:"#444",background:"rgba(255,255,255,0.025)",padding:"3px 12px",borderRadius:7,fontWeight:500}}>{item.label}</span></div>;
-          const m=item.data,out=m.direction==="out";
-          return(
-            <div key={m.id} style={{display:"flex",justifyContent:out?"flex-end":"flex-start",animation:"fadeUp 0.15s ease-out both"}}>
-              <div style={{maxWidth:"82%",borderRadius:14,padding:"9px 13px 5px",...(out?{background:"#173D2A",borderBottomRightRadius:4}:{background:"#1A1C22",borderBottomLeftRadius:4,border:"1px solid rgba(255,255,255,0.03)"})}}>
-                <div style={{fontSize:14,lineHeight:1.55,whiteSpace:"pre-wrap",wordBreak:"break-word",color:"#DDD"}} dir="rtl">{m.message}</div>
-                <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:5,marginTop:3}}>
-                  <span style={{fontSize:10,color:"#555"}}>{fmtTime(m.created_at)}</span>
-                  {out&&<Stat s={m.status} sz={14}/>}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-        <div ref={chatEndRef}/>
-      </div>
-
-      {showPremade&&win.open&&(
-        <div style={S.pmPanel}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 16px",borderBottom:"1px solid rgba(255,255,255,0.03)",position:"sticky",top:0,background:"#161920",borderRadius:"16px 16px 0 0"}}>
-            <span style={{fontWeight:600,fontSize:13,color:"#bbb"}}>הודעות מוכנות</span>
-            <button onClick={()=>setShowPremade(false)} style={{background:"none",border:"none",color:"#555",cursor:"pointer",fontSize:14}}>✕</button>
-          </div>
-          <div style={{padding:"4px 0"}}>
-            {PREMADE.map(pm=>(
-              <div key={pm.id} style={{padding:"10px 16px",borderBottom:"1px solid rgba(255,255,255,0.015)"}}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-                  <span style={{fontSize:13,fontWeight:500,color:"#ddd"}}>{pm.label}</span>
-                  <div style={{display:"flex",gap:6}}>
-                    <button onClick={()=>insertPremade(pm)} style={S.pmEditBtn}>ערוך ✏</button>
-                    <button onClick={()=>sendReply(pm.text.replace(/\{name\}/g,ac?.name||""))} style={S.pmSendBtn}>שלח →</button>
-                  </div>
-                </div>
-                <div style={{fontSize:12,color:"#555",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}} dir="rtl">{pm.text.replace(/\{name\}/g,ac?.name||"").split("\n")[0]}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div style={S.replyBar}>
-        {showSent&&<div style={{textAlign:"center",color:"#25D366",fontSize:13,fontWeight:500,marginBottom:6,animation:"toast 2s ease-out forwards"}}>✓ נשלח</div>}
-        {win.open?(
-          <div style={{display:"flex",alignItems:"flex-end",gap:8}}>
-            <button onClick={()=>setShowPremade(!showPremade)} style={{...S.pmToggle,background:showPremade?"rgba(37,211,102,0.12)":"rgba(255,255,255,0.03)",borderColor:showPremade?"rgba(37,211,102,0.25)":"rgba(255,255,255,0.05)",color:showPremade?"#25D366":"#666"}}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            </button>
-            <textarea ref={inputRef} value={replyText} onChange={e=>setReplyText(e.target.value)} placeholder={`כתוב ל${ac.name}...`} style={S.input} rows={1} dir="rtl"
-              onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendReply()}}}
-              onInput={e=>{e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,120)+"px"}}/>
-            <button onClick={()=>sendReply()} disabled={!replyText.trim()||sending} style={{...S.sendBtn,opacity:!replyText.trim()||sending?0.3:1}}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-            </button>
-          </div>
-        ):(
-          <div style={{display:"flex",alignItems:"center",gap:12,padding:"8px 6px",borderRadius:14,background:"rgba(239,68,68,0.03)",border:"1px solid rgba(239,68,68,0.07)"}}>
-            <div style={{width:44,height:44,borderRadius:13,background:"rgba(239,68,68,0.06)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-            <div><div style={{fontSize:13,fontWeight:600,color:"#EF4444"}}>החלון נעול</div><div style={{fontSize:11,color:"#666",marginTop:1}}>הלקוח צריך להשיב כדי לפתוח חלון 24 שעות חדש</div></div>
-          </div>
-        )}
+      <StatusBadge status={ac.handleStatus}/>
+      <div style={{display:"flex",alignItems:"center",gap:4,fontSize:10,fontWeight:600,padding:"3px 8px",borderRadius:7,border:"1px solid",marginLeft:6,background:win.open?"rgba(37,211,102,0.1)":"rgba(239,68,68,0.08)",color:win.open?"#25D366":"#EF4444",borderColor:win.open?"rgba(37,211,102,0.2)":"rgba(239,68,68,0.15)"}}>
+        <div style={{width:5,height:5,borderRadius:3,backgroundColor:win.open?"#25D366":"#EF4444"}}/>{win.open?"פתוח":"נעול"}
       </div>
     </div>
-  );
+
+    {ac.tags.length>0&&<div style={{padding:"5px 14px",display:"flex",gap:3,flexWrap:"wrap",borderBottom:"1px solid rgba(255,255,255,0.02)"}}>{ac.tags.map(t=>{const tag=tags.find(x=>x.name===t);return<TagPill key={t} name={t} color={tag?.color||"#888"} small/>})}</div>}
+
+    <div style={{padding:"6px 14px",borderBottom:"1px solid",background:win.open?"rgba(37,211,102,0.03)":"rgba(239,68,68,0.02)",borderBottomColor:win.open?"rgba(37,211,102,0.05)":"rgba(239,68,68,0.05)"}}>
+      <div style={{display:"flex",alignItems:"center",gap:7,fontSize:11,fontWeight:500}}>
+        {win.open?<><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#25D366" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span style={{color:"#8BC9A0"}}>{fmtRem(win.remaining)}</span><div style={{flex:1,height:2,background:"rgba(255,255,255,0.04)",borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",background:"linear-gradient(90deg,#128C7E,#25D366)",borderRadius:2,width:`${(win.remaining/(24*60*60*1000))*100}%`}}/></div></>
+        :<><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span style={{color:"#777"}}>נעול — ממתין לתשובה</span></>}
+      </div>
+    </div>
+
+    <div style={{flex:1,overflow:"auto",padding:"12px 12px 150px",display:"flex",flexDirection:"column",gap:3,background:"#0A0C0F"}}>
+      {chatGroups.map((item,i)=>{
+        if(item.type==="date")return<div key={`d${i}`} style={{textAlign:"center",padding:"10px 0 5px"}}><span style={{fontSize:10,color:"#444",background:"rgba(255,255,255,0.02)",padding:"3px 12px",borderRadius:6,fontWeight:500}}>{item.label}</span></div>;
+        const m=item.data,out=m.direction==="out",failed=m.status==="failed";
+        return<div key={m.id} style={{display:"flex",flexDirection:"column",alignItems:out?"flex-end":"flex-start",animation:"fadeUp 0.12s ease-out both"}}>
+          <div style={{maxWidth:"82%",borderRadius:14,padding:"8px 12px 4px",...(out?{background:failed?"#3D1A1A":"#173D2A",borderBottomRightRadius:4}:{background:"#1A1C22",borderBottomLeftRadius:4,border:"1px solid rgba(255,255,255,0.03)"})}}>
+            <div style={{fontSize:14,lineHeight:1.5,whiteSpace:"pre-wrap",wordBreak:"break-word",color:failed?"#F0A0A0":"#DDD"}} dir="rtl">{m.message}</div>
+            <div style={{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:4,marginTop:2}}>
+              <span style={{fontSize:10,color:"#555"}}>{fmtTime(m.created_at)}</span>
+              {out&&<Stat s={m.status} sz={13}/>}
+            </div>
+          </div>
+          {failed&&<div style={{display:"flex",alignItems:"center",gap:5,marginTop:3}}>
+            <span style={{fontSize:10,color:"#EF4444"}}>⚠ נכשל</span>
+            <button onClick={()=>resendMessage(m)} style={S.resendBtn}>שלח שוב ↻</button>
+          </div>}
+        </div>;
+      })}
+      <div ref={chatEndRef}/>
+    </div>
+
+    {showPremade&&win.open&&<div style={S.pmPanel}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",borderBottom:"1px solid rgba(255,255,255,0.03)",position:"sticky",top:0,background:"#161920",borderRadius:"16px 16px 0 0"}}>
+        <span style={{fontWeight:600,fontSize:13,color:"#bbb"}}>הודעות מוכנות</span>
+        <button onClick={()=>setShowPremade(false)} style={{background:"none",border:"none",color:"#555",cursor:"pointer",fontSize:14}}>✕</button>
+      </div>
+      <div style={{padding:"4px 0"}}>{templates.map(t=>
+        <div key={t.id} style={{padding:"9px 14px",borderBottom:"1px solid rgba(255,255,255,0.015)"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+            <span style={{fontSize:13,fontWeight:500,color:"#ddd"}}>{t.label}</span>
+            <div style={{display:"flex",gap:5}}>
+              <button onClick={()=>insertPremade(t)} style={S.pmEditBtn}>ערוך ✏</button>
+              <button onClick={()=>sendReply(t.text.replace(/\{name\}/g,displayName))} style={S.pmSendBtn}>שלח →</button>
+            </div>
+          </div>
+          <div style={{fontSize:11,color:"#555",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}} dir="rtl">{t.text.replace(/\{name\}/g,displayName).split("\n")[0]}</div>
+        </div>
+      )}</div>
+    </div>}
+
+    <div style={S.replyBar}>
+      {showSent&&<div style={{textAlign:"center",color:"#25D366",fontSize:13,fontWeight:500,marginBottom:6,animation:"toast 2s ease-out forwards"}}>✓ נשלח</div>}
+      {win.open?<div style={{display:"flex",alignItems:"flex-end",gap:8}}>
+        <button onClick={()=>setShowPremade(!showPremade)} style={{...S.pmToggle,background:showPremade?"rgba(37,211,102,0.12)":"rgba(255,255,255,0.03)",borderColor:showPremade?"rgba(37,211,102,0.25)":"rgba(255,255,255,0.05)",color:showPremade?"#25D366":"#666"}}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </button>
+        <textarea ref={inputRef} value={replyText} onChange={e=>setReplyText(e.target.value)} placeholder={`כתוב ל${displayName}...`} style={S.input} rows={1} dir="rtl"
+          onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendReply()}}}
+          onInput={e=>{e.target.style.height="auto";e.target.style.height=Math.min(e.target.scrollHeight,120)+"px"}}/>
+        <button onClick={()=>sendReply()} disabled={!replyText.trim()||sending} style={{...S.sendBtn,opacity:!replyText.trim()||sending?0.3:1}}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
+      :<div style={{display:"flex",alignItems:"center",gap:12,padding:"8px 6px",borderRadius:14,background:"rgba(239,68,68,0.03)",border:"1px solid rgba(239,68,68,0.07)"}}>
+        <div style={{width:42,height:42,borderRadius:12,background:"rgba(239,68,68,0.06)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2" strokeLinecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <div><div style={{fontSize:12,fontWeight:600,color:"#EF4444"}}>החלון נעול</div><div style={{fontSize:10,color:"#666",marginTop:1}}>הלקוח צריך להשיב כדי לפתוח חלון חדש</div></div>
+      </div>}
+    </div>
+  </div>;
 }
 
-// ─── Styles ───
+// ── Styles ──
 const S={
   shell:{fontFamily:"'Rubik',system-ui,sans-serif",background:"#0A0C0F",minHeight:"100vh",maxWidth:480,margin:"0 auto",display:"flex",flexDirection:"column",color:"#E5E5E5",position:"relative"},
-  header:{background:"#10131A",borderBottom:"1px solid rgba(255,255,255,0.03)",padding:"18px 20px 14px"},
+  header:{background:"#10131A",borderBottom:"1px solid rgba(255,255,255,0.03)",padding:"16px 18px 12px"},
   headerInner:{display:"flex",justifyContent:"space-between",alignItems:"center"},
   brand:{fontSize:22,fontWeight:700,color:"#F5F5F5",letterSpacing:"-0.5px",display:"flex",alignItems:"center",gap:8},
   brandSub:{fontSize:12,color:"#25D366",fontWeight:500,marginTop:2},
   unreadGlobal:{background:"#25D366",color:"#000",fontWeight:700,fontSize:13,borderRadius:20,padding:"3px 10px"},
-  settingsBtn:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:11,width:40,height:40,display:"flex",alignItems:"center",justifyContent:"center",color:"#777",cursor:"pointer"},
-  searchBox:{display:"flex",alignItems:"center",gap:10,background:"rgba(255,255,255,0.03)",borderRadius:12,padding:"10px 14px",border:"1px solid rgba(255,255,255,0.03)"},
-  searchInput:{flex:1,background:"none",border:"none",color:"#E5E5E5",fontSize:14,fontFamily:"'Rubik',system-ui"},
-  contactRow:{display:"flex",alignItems:"center",gap:14,padding:"13px 20px",cursor:"pointer",borderBottom:"1px solid rgba(255,255,255,0.02)",animation:"fadeUp 0.3s ease-out both",transition:"background 0.12s"},
-  avatar:{width:50,height:50,borderRadius:15,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:600,fontSize:21,color:"#fff"},
-  badge:{background:"#25D366",color:"#000",fontWeight:700,fontSize:11,borderRadius:10,padding:"2px 7px",minWidth:20,textAlign:"center",flexShrink:0},
-  chatHead:{background:"#10131A",borderBottom:"1px solid rgba(255,255,255,0.03)",padding:"12px 14px",display:"flex",alignItems:"center",gap:11,position:"sticky",top:0,zIndex:50},
+  settingsBtn:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:11,width:38,height:38,display:"flex",alignItems:"center",justifyContent:"center",color:"#777",cursor:"pointer"},
+  statusTabs:{display:"flex",borderBottom:"1px solid rgba(255,255,255,0.03)",overflow:"auto"},
+  statusTab:{flex:"none",padding:"10px 14px",background:"none",border:"none",borderBottom:"2px solid transparent",color:"#555",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:4,whiteSpace:"nowrap"},
+  searchBox:{display:"flex",alignItems:"center",gap:10,background:"rgba(255,255,255,0.03)",borderRadius:12,padding:"9px 14px",border:"1px solid rgba(255,255,255,0.03)"},
+  searchInput:{flex:1,background:"none",border:"none",color:"#E5E5E5",fontSize:14,fontFamily:"inherit"},
+  contactRow:{display:"flex",alignItems:"center",gap:12,padding:"12px 18px",cursor:"pointer",borderBottom:"1px solid rgba(255,255,255,0.02)",animation:"fadeUp 0.3s ease-out both"},
+  checkbox:{width:22,height:22,borderRadius:7,border:"2px solid",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s"},
+  badge:{background:"#25D366",color:"#000",fontWeight:700,fontSize:10,borderRadius:10,padding:"2px 6px",minWidth:18,textAlign:"center",flexShrink:0},
+  bulkBar:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 18px",background:"rgba(255,255,255,0.02)",borderBottom:"1px solid rgba(255,255,255,0.03)",animation:"fadeUp 0.15s"},
+  bulkBtn:{padding:"6px 10px",borderRadius:8,border:"1px solid",background:"transparent",cursor:"pointer",fontSize:12,fontFamily:"inherit"},
+  chatHead:{background:"#10131A",borderBottom:"1px solid rgba(255,255,255,0.03)",padding:"10px 14px",display:"flex",alignItems:"center",gap:8,position:"sticky",top:0,zIndex:50},
   backBtn:{background:"none",border:"none",color:"#25D366",cursor:"pointer",padding:2,display:"flex"},
-  replyBar:{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:"linear-gradient(to top,#10131A 85%,rgba(16,19,26,0.97))",padding:"8px 14px 14px",borderTop:"1px solid rgba(255,255,255,0.03)",zIndex:50},
-  input:{flex:1,padding:"11px 13px",background:"rgba(255,255,255,0.035)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:14,color:"#E5E5E5",fontSize:14,fontFamily:"'Rubik',system-ui",resize:"none",lineHeight:1.4,maxHeight:120,overflow:"auto"},
-  sendBtn:{width:44,height:44,borderRadius:13,background:"linear-gradient(135deg,#25D366,#128C7E)",border:"none",color:"#fff",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"opacity 0.15s"},
-  pmToggle:{width:44,height:44,borderRadius:13,border:"1px solid",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s"},
-  pmPanel:{position:"fixed",bottom:74,left:"50%",transform:"translateX(-50%)",width:"calc(100% - 28px)",maxWidth:452,background:"#161920",border:"1px solid rgba(255,255,255,0.05)",borderRadius:16,zIndex:60,animation:"slideUp 0.2s ease-out",maxHeight:300,overflow:"auto",boxShadow:"0 -6px 25px rgba(0,0,0,0.5)"},
-  pmEditBtn:{fontSize:11,fontWeight:500,color:"#888",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:6,padding:"3px 10px",cursor:"pointer",fontFamily:"'Rubik',system-ui"},
-  pmSendBtn:{fontSize:11,fontWeight:600,color:"#25D366",background:"rgba(37,211,102,0.08)",border:"1px solid rgba(37,211,102,0.18)",borderRadius:6,padding:"3px 10px",cursor:"pointer",fontFamily:"'Rubik',system-ui"},
+  replyBar:{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:"linear-gradient(to top,#10131A 85%,rgba(16,19,26,0.97))",padding:"8px 14px calc(14px + env(safe-area-inset-bottom))",borderTop:"1px solid rgba(255,255,255,0.03)",zIndex:50},
+  input:{flex:1,padding:"10px 12px",background:"rgba(255,255,255,0.035)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:14,color:"#E5E5E5",fontSize:14,fontFamily:"inherit",resize:"none",lineHeight:1.4,maxHeight:120,overflow:"auto"},
+  sendBtn:{width:42,height:42,borderRadius:12,background:"linear-gradient(135deg,#25D366,#128C7E)",border:"none",color:"#fff",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0},
+  pmToggle:{width:42,height:42,borderRadius:12,border:"1px solid",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.15s"},
+  pmPanel:{position:"fixed",bottom:72,left:"50%",transform:"translateX(-50%)",width:"calc(100% - 28px)",maxWidth:452,background:"#161920",border:"1px solid rgba(255,255,255,0.05)",borderRadius:16,zIndex:60,animation:"slideUp 0.2s ease-out",maxHeight:280,overflow:"auto",boxShadow:"0 -6px 25px rgba(0,0,0,0.5)"},
+  pmEditBtn:{fontSize:10,fontWeight:500,color:"#888",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:6,padding:"3px 8px",cursor:"pointer",fontFamily:"inherit"},
+  pmSendBtn:{fontSize:10,fontWeight:600,color:"#25D366",background:"rgba(37,211,102,0.08)",border:"1px solid rgba(37,211,102,0.18)",borderRadius:6,padding:"3px 8px",cursor:"pointer",fontFamily:"inherit"},
+  resendBtn:{fontSize:10,fontWeight:600,color:"#F97316",background:"rgba(249,115,22,0.08)",border:"1px solid rgba(249,115,22,0.2)",borderRadius:6,padding:"2px 8px",cursor:"pointer",fontFamily:"inherit"},
   footer:{padding:"24px 20px 20px",display:"flex",flexDirection:"column",alignItems:"center",gap:8},
-  referralBtn:{marginTop:8,padding:"10px 24px",background:"linear-gradient(135deg,rgba(232,185,49,0.08),rgba(232,185,49,0.04))",border:"1px solid rgba(232,185,49,0.15)",borderRadius:12,color:"#E8B931",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'Rubik',system-ui"},
-  settingsHead:{background:"#10131A",borderBottom:"1px solid rgba(255,255,255,0.03)",padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,zIndex:50},
+  referralBtn:{marginTop:8,padding:"10px 24px",background:"linear-gradient(135deg,rgba(232,185,49,0.08),rgba(232,185,49,0.04))",border:"1px solid rgba(232,185,49,0.15)",borderRadius:12,color:"#E8B931",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
+  detailHead:{background:"#10131A",borderBottom:"1px solid rgba(255,255,255,0.03)",padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,zIndex:50},
+  saveBtn:{padding:"8px 16px",background:"linear-gradient(135deg,#25D366,#128C7E)",border:"none",borderRadius:10,color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"},
+  fieldGroup:{marginBottom:16},
+  fieldLabel:{fontSize:12,color:"#666",fontWeight:500,marginBottom:6,display:"block"},
+  fieldInput:{width:"100%",padding:"12px 14px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:12,color:"#E5E5E5",fontSize:14,fontFamily:"inherit"},
+  tagToggle:{padding:"6px 12px",borderRadius:8,border:"1px solid",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"inherit",background:"transparent"},
+  miniStat:{background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.04)",borderRadius:10,padding:"10px 8px",textAlign:"center"},
+  actionBtn:{display:"flex",alignItems:"center",gap:10,padding:"14px 16px",background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:12,color:"#999",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"inherit",width:"100%"},
   sTabs:{display:"flex",gap:0,borderBottom:"1px solid rgba(255,255,255,0.03)"},
-  sTab:{flex:1,padding:"12px 0",background:"none",border:"none",borderBottom:"2px solid transparent",color:"#666",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"'Rubik',system-ui"},
+  sTab:{flex:1,padding:"11px 0",background:"none",border:"none",borderBottom:"2px solid transparent",color:"#666",fontSize:11,fontWeight:500,cursor:"pointer",fontFamily:"inherit"},
   sTabActive:{color:"#25D366",borderBottomColor:"#25D366"},
   costGrid:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20},
   costCard:{background:"rgba(255,255,255,0.025)",border:"1px solid rgba(255,255,255,0.04)",borderRadius:14,padding:"16px 14px",textAlign:"center"},
   costLabel:{fontSize:11,color:"#666",marginBottom:6,fontWeight:500},
   costValue:{fontSize:22,fontWeight:700,color:"#F0F0F0"},
-  costSection:{marginBottom:20},
-  costSectionTitle:{fontSize:13,fontWeight:600,color:"#888",marginBottom:10,paddingBottom:6,borderBottom:"1px solid rgba(255,255,255,0.03)"},
   costRow:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid rgba(255,255,255,0.02)"},
   accountItem:{display:"flex",alignItems:"center",gap:14,padding:"16px 4px",borderBottom:"1px solid rgba(255,255,255,0.03)",cursor:"pointer"},
   accountIcon:{width:42,height:42,borderRadius:12,background:"rgba(255,255,255,0.03)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0},
