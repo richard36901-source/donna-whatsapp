@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>WhatsApp API | AutoScale</title>
+<!-- GTM -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f)})(window,document,'script','dataLayer','GTM-WNJN9XQT');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080c0a;
+  --surf:#0f1510;
+  --surf2:#141c15;
+  --surf3:#1a2419;
+  --border:#1e2b1d;
+  --border2:#253324;
+  --wa:#25D366;
+  --wa2:#128C7E;
+  --wa3:#075E54;
+  --text:#eef5ee;
+  --muted:#5a7059;
+  --muted2:#7a9478;
+  --gold:#c9a84c;
+  --r:14px;
+  --r2:22px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Heebo',sans-serif;font-size:16px;line-height:1.6;overflow-x:hidden}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* HEADER */
+header{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 5%;height:70px;display:flex;align-items:center;justify-content:space-between;background:rgba(8,12,10,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.logo-wrap{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-img{height:36px;border-radius:8px}
+.logo-text{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--text)}
+.logo-sub{font-size:11px;color:var(--wa);letter-spacing:.05em;font-weight:600}
+.header-right{display:flex;align-items:center;gap:16px}
+.lang-toggle{display:flex;gap:6px;background:var(--surf2);padding:4px;border-radius:10px;border:1px solid var(--border)}
+.lang-btn{background:none;border:none;cursor:pointer;font-size:20px;padding:4px 8px;border-radius:7px;transition:.2s;opacity:.5}
+.lang-btn.active{background:var(--surf3);opacity:1;box-shadow:0 0 0 1px var(--border2)}
+.header-cta{background:var(--wa);color:#000;border:none;padding:9px 22px;border-radius:10px;font-family:'Heebo',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:.15s}
+.header-cta:hover{background:#1fbd58;transform:translateY(-1px)}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:100px 5% 60px;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 40%, rgba(37,211,102,.07) 0%, transparent 70%),radial-gradient(ellipse 40% 40% at 80% 70%, rgba(18,140,126,.05) 0%, transparent 60%)}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(37,211,102,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(37,211,102,.03) 1px,transparent 1px);background-size:50px 50px;mask-image:radial-gradient(ellipse 70% 50% at 50% 50%,black 0%,transparent 100%)}
+.hero-content{position:relative;z-index:2;max-width:760px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.25);padding:7px 18px;border-radius:50px;font-size:13px;font-weight:600;color:var(--wa);margin-bottom:32px;letter-spacing:.03em}
+.hero-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--wa);box-shadow:0 0 8px var(--wa);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.85)}}
+h1{font-family:'Syne',sans-serif;font-size:clamp(36px,6vw,64px);font-weight:800;line-height:1.1;color:var(--text);margin-bottom:24px}
+h1 span{color:var(--wa)}
+.hero-sub{font-size:clamp(15px,2vw,19px);color:var(--muted2);max-width:560px;margin:0 auto 42px;font-weight:400;line-height:1.7}
+.hero-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn-primary{background:var(--wa);color:#000;padding:15px 36px;border-radius:12px;font-family:'Heebo',sans-serif;font-weight:700;font-size:16px;text-decoration:none;transition:.2s;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn-primary:hover{background:#1fbd58;transform:translateY(-2px);box-shadow:0 12px 40px rgba(37,211,102,.3)}
+.btn-ghost{background:transparent;color:var(--muted2);padding:15px 28px;border-radius:12px;font-family:'Heebo',sans-serif;font-weight:600;font-size:16px;text-decoration:none;transition:.2s;border:1px solid var(--border2);cursor:pointer}
+.btn-ghost:hover{border-color:var(--wa);color:var(--wa)}
+.hero-stats{display:flex;gap:40px;justify-content:center;margin-top:56px;flex-wrap:wrap}
+.stat{text-align:center}
+.stat-num{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--wa)}
+.stat-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+
+/* TRUST BAR */
+.trust-bar{background:var(--surf);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:20px 5%}
+.trust-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:center;gap:40px;flex-wrap:wrap}
+.trust-item{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted2);font-weight:500}
+.trust-icon{font-size:20px}
+
+/* SECTIONS */
+section{padding:80px 5%}
+.section-inner{max-width:1100px;margin:0 auto}
+.section-tag{font-size:12px;font-weight:700;color:var(--wa);text-transform:uppercase;letter-spacing:.12em;margin-bottom:12px}
+.section-title{font-family:'Syne',sans-serif;font-size:clamp(26px,4vw,40px);font-weight:800;line-height:1.15;margin-bottom:16px}
+.section-sub{font-size:17px;color:var(--muted2);max-width:540px;line-height:1.7}
+
+/* STEPS */
+#how{background:var(--surf)}
+.steps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-top:52px}
+.step-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--r2);padding:32px 28px;position:relative;overflow:hidden;transition:.25s}
+.step-card:hover{border-color:var(--border2);transform:translateY(-3px)}
+.step-num{position:absolute;top:20px;left:20px;font-family:'Syne',sans-serif;font-size:48px;font-weight:800;color:rgba(37,211,102,.06);line-height:1}
+.step-icon{font-size:32px;margin-bottom:16px}
+.step-title{font-size:18px;font-weight:700;margin-bottom:8px;color:var(--text)}
+.step-desc{font-size:14px;color:var(--muted2);line-height:1.7}
+.step-arrow{position:absolute;top:50%;left:-16px;transform:translateY(-50%);font-size:20px;color:var(--wa);opacity:.5}
+
+/* FEATURES */
+.features-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:52px}
+.feature-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:24px;transition:.2s}
+.feature-card:hover{border-color:rgba(37,211,102,.3);background:var(--surf2)}
+.feat-icon{width:44px;height:44px;background:rgba(37,211,102,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px}
+.feat-title{font-size:15px;font-weight:700;margin-bottom:6px}
+.feat-desc{font-size:13px;color:var(--muted2);line-height:1.6}
+
+/* PRICING */
+#pricing{background:var(--surf)}
+.pricing-center{display:flex;justify-content:center;margin-top:52px}
+.plan-card{background:var(--bg);border:2px solid var(--wa);border-radius:var(--r2);padding:44px;max-width:480px;width:100%;position:relative;box-shadow:0 0 80px rgba(37,211,102,.08)}
+.plan-badge{position:absolute;top:-14px;right:32px;background:var(--wa);color:#000;font-size:12px;font-weight:800;padding:5px 18px;border-radius:50px;letter-spacing:.05em}
+.plan-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px}
+.plan-desc{font-size:14px;color:var(--muted2);margin-bottom:28px;line-height:1.6}
+.plan-price{display:flex;align-items:baseline;gap:6px;margin-bottom:8px}
+.plan-amount{font-family:'Syne',sans-serif;font-size:52px;font-weight:800;color:var(--wa);line-height:1}
+.plan-currency{font-size:22px;font-weight:700;color:var(--wa)}
+.plan-per{font-size:15px;color:var(--muted2)}
+.plan-note{font-size:12px;color:var(--muted);margin-bottom:32px}
+.plan-features{list-style:none;margin-bottom:36px;display:flex;flex-direction:column;gap:12px}
+.plan-features li{display:flex;align-items:center;gap:12px;font-size:14px;color:var(--muted2)}
+.plan-features li::before{content:"✓";color:var(--wa);font-weight:800;font-size:14px;flex-shrink:0;width:20px;height:20px;background:rgba(37,211,102,.1);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.plan-features li strong{color:var(--text)}
+.btn-pay{display:block;width:100%;background:var(--wa);color:#000;padding:17px;border-radius:12px;font-family:'Heebo',sans-serif;font-weight:800;font-size:17px;text-align:center;text-decoration:none;transition:.2s;border:none;cursor:pointer}
+.btn-pay:hover{background:#1fbd58;transform:translateY(-2px);box-shadow:0 12px 40px rgba(37,211,102,.3)}
+.plan-secure{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;font-size:12px;color:var(--muted)}
+
+/* MOCKUPS */
+#mockups{background:var(--bg);padding:80px 5%}
+.mockups-title{text-align:center;margin-bottom:56px}
+.mockups-wrap{display:flex;gap:60px;align-items:flex-end;justify-content:center;flex-wrap:wrap}
+
+/* Desktop mockup */
+.desktop-mock{position:relative}
+.desktop-screen{width:min(560px,90vw);background:#0f1510;border:2px solid #1e2b1d;border-radius:12px 12px 0 0;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,.6)}
+.desktop-bar{background:#141c15;padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #1e2b1d}
+.db-dots{display:flex;gap:5px}
+.db-dot{width:10px;height:10px;border-radius:50%}
+.db-url{flex:1;background:#0d140e;border-radius:6px;padding:4px 12px;font-size:10px;color:#5a7059;text-align:center}
+.desktop-content{padding:20px;min-height:300px}
+.mock-nav{background:#141c15;border-radius:8px;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.mock-logo{font-size:11px;font-weight:700;color:var(--wa)}
+.mock-links{display:flex;gap:10px}
+.mock-link{width:30px;height:6px;background:#1e2b1d;border-radius:3px}
+.mock-hero-inner{text-align:center;padding:20px 10px}
+.mock-h1{font-size:14px;font-weight:800;color:var(--text);margin-bottom:8px}
+.mock-sub{font-size:9px;color:var(--muted2);margin-bottom:14px;line-height:1.5}
+.mock-btn{display:inline-block;background:var(--wa);color:#000;padding:7px 20px;border-radius:7px;font-size:10px;font-weight:700}
+.mock-cards{display:flex;gap:8px;margin-top:16px}
+.mock-card{flex:1;background:#141c15;border-radius:8px;padding:10px;border:1px solid #1e2b1d}
+.mc-icon{font-size:16px;margin-bottom:5px}
+.mc-title{font-size:9px;font-weight:700;color:var(--text);margin-bottom:3px}
+.mc-line{height:4px;background:#1e2b1d;border-radius:2px;margin-bottom:3px}
+.mc-line:last-child{width:60%}
+.desktop-stand{width:min(200px,36vw);height:16px;background:#141c15;border-radius:0 0 8px 8px;margin:0 auto;border:2px solid #1e2b1d;border-top:none}
+.desktop-base{width:min(260px,47vw);height:8px;background:#1e2b1d;border-radius:4px;margin:0 auto}
+
+/* Phone mockup */
+.phone-mock{position:relative}
+.phone-frame{width:180px;background:#0a0a0a;border-radius:36px;border:3px solid #1e2b1d;overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,.6);position:relative}
+.phone-notch{width:70px;height:20px;background:#0a0a0a;border-radius:0 0 14px 14px;margin:0 auto;position:relative;z-index:2}
+.phone-screen{background:#0f1510;min-height:340px;padding:10px;margin-top:-4px}
+.phone-status{display:flex;justify-content:space-between;font-size:7px;color:var(--muted2);padding:0 4px;margin-bottom:8px}
+.phone-card{background:#141c15;border-radius:10px;padding:10px;border:1px solid rgba(37,211,102,.2);margin-bottom:8px}
+.pc-wa-logo{font-size:18px;text-align:center;margin-bottom:5px}
+.pc-title{font-size:10px;font-weight:800;color:var(--text);text-align:center;margin-bottom:4px}
+.pc-price{font-size:18px;font-weight:800;color:var(--wa);text-align:center;margin-bottom:6px}
+.pc-feature{font-size:7px;color:var(--muted2);padding:2px 0;border-bottom:1px solid #1e2b1d;display:flex;align-items:center;gap:4px}
+.pc-feature::before{content:"✓";color:var(--wa);font-size:7px}
+.pc-btn{display:block;background:var(--wa);color:#000;text-align:center;padding:7px;border-radius:7px;font-size:9px;font-weight:700;margin-top:8px}
+.phone-bottom{height:5px;background:#1a1a1a;margin:6px;border-radius:3px}
+
+/* SETUP UPSELL */
+.setup-upsell{background:linear-gradient(135deg,var(--surf2),var(--surf3));border:1px solid var(--border2);border-radius:var(--r2);padding:44px;max-width:700px;margin:0 auto;text-align:center;position:relative;overflow:hidden}
+.su-glow{position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(37,211,102,.08) 0%,transparent 70%)}
+.su-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);padding:5px 16px;border-radius:50px;font-size:12px;font-weight:700;color:var(--gold);margin-bottom:20px}
+.su-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;margin-bottom:10px}
+.su-desc{font-size:15px;color:var(--muted2);margin-bottom:24px;line-height:1.7}
+.su-price{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--gold);margin-bottom:6px}
+.su-tax{font-size:12px;color:var(--muted);margin-bottom:28px}
+.su-features{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:28px}
+.su-feat{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted2)}
+.su-feat::before{content:"⚡"}
+.btn-schedule{display:inline-flex;align-items:center;gap:8px;background:transparent;border:2px solid var(--gold);color:var(--gold);padding:14px 32px;border-radius:12px;font-family:'Heebo',sans-serif;font-weight:700;font-size:15px;text-decoration:none;transition:.2s;cursor:pointer}
+.btn-schedule:hover{background:rgba(201,168,76,.1);transform:translateY(-2px)}
+
+/* FAQ */
+#faq{background:var(--surf)}
+.faq-list{max-width:680px;margin:40px auto 0;display:flex;flex-direction:column;gap:8px}
+.faq-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.faq-q{padding:18px 22px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-weight:600;font-size:15px;user-select:none}
+.faq-q:hover{color:var(--wa)}
+.faq-chevron{color:var(--muted2);transition:.25s;flex-shrink:0}
+.faq-item.open .faq-chevron{transform:rotate(180deg);color:var(--wa)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s}
+.faq-item.open .faq-a{max-height:300px}
+.faq-a-inner{padding:0 22px 18px;font-size:14px;color:var(--muted2);line-height:1.8;border-top:1px solid var(--border)}
+
+/* TERMS */
+#terms{background:var(--bg)}
+.terms-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-top:40px}
+.terms-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.terms-header{background:var(--surf2);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-weight:700;font-size:15px}
+.terms-flag{font-size:20px}
+.terms-body{padding:20px 22px;font-size:13px;color:var(--muted2);line-height:1.9;border-top:1px solid var(--border)}
+.terms-body h4{color:var(--text);font-size:14px;margin:16px 0 6px;font-weight:700}
+.terms-body h4:first-child{margin-top:0}
+.terms-body ul{padding-right:16px;margin-top:6px}
+.terms-body ul li{margin-bottom:5px}
+.cancel-highlight{background:rgba(37,211,102,.05);border:1px solid rgba(37,211,102,.15);border-radius:8px;padding:12px 16px;margin-top:14px;font-size:13px;line-height:1.7}
+.cancel-highlight strong{color:var(--wa)}
+
+/* FOOTER */
+footer{background:var(--surf);border-top:1px solid var(--border);padding:40px 5%}
+.footer-inner{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px}
+.footer-logo{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--text)}
+.footer-logo span{color:var(--wa)}
+.footer-links{display:flex;gap:24px;flex-wrap:wrap}
+.footer-links a{font-size:13px;color:var(--muted2);text-decoration:none;transition:.15s}
+.footer-links a:hover{color:var(--wa)}
+.footer-bottom{max-width:1100px;margin:24px auto 0;padding-top:24px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.footer-copy{font-size:12px;color:var(--muted)}
+.footer-wa{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--wa);text-decoration:none;font-weight:600}
+
+/* ENGLISH OVERLAY */
+.en-notice{display:none;background:rgba(37,211,102,.07);border:1px solid rgba(37,211,102,.2);border-radius:12px;padding:20px 28px;text-align:center;margin:80px auto;max-width:500px;font-size:15px;color:var(--muted2)}
+.en-notice strong{color:var(--wa);display:block;font-size:20px;margin-bottom:8px}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  header{padding:0 4%}
+  .logo-text{display:none}
+  section{padding:60px 4%}
+  .hero{padding:90px 4% 50px}
+  .steps-grid,.features-grid{grid-template-columns:1fr}
+  .hero-stats{gap:24px}
+  .plan-card{padding:28px}
+  .setup-upsell{padding:28px}
+  .mockups-wrap{gap:30px}
+  .desktop-screen{width:min(400px,85vw)}
+}
+
+/* ANIMATIONS */
+.fade-up{opacity:0;transform:translateY(30px);transition:opacity .6s,transform .6s}
+.fade-up.visible{opacity:1;transform:none}
+</style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WNJN9XQT" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+
+<!-- ENGLISH MODE NOTICE -->
+<div id="enNotice" class="en-notice" style="display:none">
+  <strong>English version coming soon</strong>
+  The English version of this page is currently in development.<br>In the meantime, please use the Hebrew version above.
+</div>
+
+<!-- HEADER -->
+<header>
+  <a href="https://autoscalehq.io" class="logo-wrap">
+    <img src="https://raw.githubusercontent.com/richard36901-source/Home-page/main/logo.jpg" class="logo-img" alt="AutoScale"/>
+    <div>
+      <div class="logo-text">AutoScale</div>
+      <div class="logo-sub">WhatsApp API</div>
+    </div>
+  </a>
+  <div class="header-right">
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('he')" title="עברית">🇮🇱</button>
+      <button class="lang-btn" onclick="setLang('en')" title="English">🇬🇧</button>
+    </div>
+    <button class="header-cta" onclick="scrollTo('#pricing')">התחילו עכשיו</button>
+  </div>
+</header>
+
+<!-- MAIN CONTENT (Hebrew) -->
+<div id="heContent">
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content fade-up">
+    <div class="hero-badge">
+      <span class="dot"></span>
+      WhatsApp Business Cloud API — מוסמך Meta
+    </div>
+    <h1>חברו את הביזנס שלכם<br/>ל<span>WhatsApp API</span></h1>
+    <p class="hero-sub">שלחו הודעות אוטומטיות, נהלו שיחות, והתחברו לכל מערכת — הכל דרך ה-API הרשמי של Meta.</p>
+    <div class="hero-ctas">
+      <a href="#pricing" class="btn-primary" onclick="event.preventDefault();document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">🚀 קנו עכשיו</a>
+      <a href="#how" class="btn-ghost" onclick="event.preventDefault();document.getElementById('how').scrollIntoView({behavior:'smooth'})">איך זה עובד?</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num">3 דקות</div><div class="stat-label">עד שהכל חי</div></div>
+      <div class="stat"><div class="stat-num">∞</div><div class="stat-label">הודעות בחודש</div></div>
+      <div class="stat"><div class="stat-num">100%</div><div class="stat-label">API רשמי</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST BAR -->
+<div class="trust-bar">
+  <div class="trust-inner">
+    <div class="trust-item"><span class="trust-icon">✅</span>API רשמי של Meta</div>
+    <div class="trust-item"><span class="trust-icon">🔒</span>אבטחה מלאה</div>
+    <div class="trust-item"><span class="trust-icon">⚡</span>הגדרה מהירה</div>
+    <div class="trust-item"><span class="trust-icon">🇮🇱</span>תמיכה בעברית</div>
+    <div class="trust-item"><span class="trust-icon">🔗</span>אינטגרציה עם Make, n8n ועוד</div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-inner">
+    <div class="section-tag">איך זה עובד</div>
+    <h2 class="section-title">שלושה שלבים — ואתם חיים</h2>
+    <p class="section-sub">תהליך מהיר ופשוט. אין צורך בידע טכני מוקדם.</p>
+    <div class="steps-grid">
+      <div class="step-card fade-up">
+        <div class="step-num">01</div>
+        <div class="step-icon">💳</div>
+        <h3 class="step-title">קנו מנוי</h3>
+        <p class="step-desc">בחרו את התוכנית, השלימו את התשלום — תקבלו מייל עם גישה לחשבון תוך דקות.</p>
+      </div>
+      <div class="step-card fade-up">
+        <div class="step-num">02</div>
+        <div class="step-icon">🔌</div>
+        <h3 class="step-title">חברו לMeta</h3>
+        <p class="step-desc">עקבו אחרי המדריך שלנו — חיבור חשבון הוואטסאפ שלכם לAPI של Meta ב-5 צעדים.</p>
+      </div>
+      <div class="step-card fade-up">
+        <div class="step-num">03</div>
+        <div class="step-icon">🚀</div>
+        <h3 class="step-title">התחילו לשלוח</h3>
+        <p class="step-desc">הגדירו webhook, חברו ל-Make.com או לכל כלי אוטומציה — ושלחו הודעות אוטומטיות.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-inner">
+    <div class="section-tag">מה כלול</div>
+    <h2 class="section-title">הכל במקום אחד</h2>
+    <div class="features-grid">
+      <div class="feature-card fade-up">
+        <div class="feat-icon">📨</div>
+        <h4 class="feat-title">שליחת הודעות מותאמות אישית</h4>
+        <p class="feat-desc">שלחו הודעות טקסט, תמונות, וידאו ומסמכים — לאחד או לרבים.</p>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feat-icon">🔔</div>
+        <h4 class="feat-title">הודעות תבנית (Templates)</h4>
+        <p class="feat-desc">תבניות מאושרות Meta לשליחת עדכונים, תזכורות, ואישורים.</p>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feat-icon">🔗</div>
+        <h4 class="feat-title">Webhook — קבלת הודעות</h4>
+        <p class="feat-desc">קבלו הודעות נכנסות בזמן אמת — מחוברים לכל מערכת שתרצו.</p>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feat-icon">⚙️</div>
+        <h4 class="feat-title">חיבור ל-Make, n8n, Zapier</h4>
+        <p class="feat-desc">חברו לכל כלי אוטומציה דרך HTTP — אין הגבלה על מה שאפשר לבנות.</p>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feat-icon">📊</div>
+        <h4 class="feat-title">לוח בקרה פשוט</h4>
+        <p class="feat-desc">ראו סטטוס הודעות, שגיאות, ועומס בזמן אמת — ממשק נקי ופשוט.</p>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="feat-icon">🛡️</div>
+        <h4 class="feat-title">מדריכי הגדרה + תמיכה</h4>
+        <p class="feat-desc">מדריכים בעברית, תמיכה בוואטסאפ, ועזרה מאנשי AutoScale.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section-inner" style="text-align:center">
+    <div class="section-tag">מחיר</div>
+    <h2 class="section-title">תוכנית אחת. ברורה. פשוטה.</h2>
+    <p class="section-sub" style="margin:0 auto 0">ללא עלויות נסתרות. תשלום חודשי. ביטול בכל עת.</p>
+    <div class="pricing-center" style="margin-top:48px">
+      <div class="plan-card">
+        <div class="plan-badge">הכי פופולרי</div>
+        <div style="font-size:32px;margin-bottom:12px">💬</div>
+        <h3 class="plan-name">WhatsApp Business API</h3>
+        <p class="plan-desc">גישה מלאה לAPI הרשמי של Meta — מחוברים, אוטומטיים, ומוכנים לפעולה.</p>
+        <div class="plan-price">
+          <span class="plan-currency">₪</span>
+          <span class="plan-amount">199</span>
+          <span class="plan-per">/ חודש</span>
+        </div>
+        <p class="plan-note">+ מע"מ · מתחדש אוטומטית · ביטול ע"י מייל</p>
+        <ul class="plan-features">
+          <li><strong>גישה מלאה לWhatsApp Cloud API</strong></li>
+          <li>שליחה וקבלה של הודעות ללא הגבלה</li>
+          <li>תמיכה בהודעות תבנית (Templates)</li>
+          <li>Webhook לקבלת הודעות בזמן אמת</li>
+          <li>חיבור HTTP לכל כלי אוטומציה</li>
+          <li>לוח בקרה + לוגים</li>
+          <li>מדריכי הגדרה בעברית</li>
+          <li>תמיכה דרך WhatsApp</li>
+        </ul>
+        <a href="[PAYMENT_LINK]" class="btn-pay">💳 התחילו עכשיו — ₪199/חודש</a>
+        <div class="plan-secure">🔒 תשלום מאובטח · SSL מלא</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DEVICE MOCKUPS -->
+<section id="mockups" style="background:var(--surf)">
+  <div class="section-inner" style="text-align:center">
+    <div class="section-tag">תצוגה מקדימה</div>
+    <h2 class="section-title">ככה זה נראה</h2>
+    <p class="section-sub" style="margin:0 auto 48px">ממשק נקי, מהיר, ותואם לכל מכשיר.</p>
+    <div class="mockups-wrap">
+
+      <!-- Desktop -->
+      <div class="desktop-mock">
+        <div class="desktop-screen">
+          <div class="desktop-bar">
+            <div class="db-dots">
+              <div class="db-dot" style="background:#ff5f57"></div>
+              <div class="db-dot" style="background:#febc2e"></div>
+              <div class="db-dot" style="background:#28c840"></div>
+            </div>
+            <div class="db-url">app.autoscalehq.io/whatsapp</div>
+          </div>
+          <div class="desktop-content">
+            <div class="mock-nav">
+              <span class="mock-logo">AutoScale WhatsApp</span>
+              <div class="mock-links"><div class="mock-link"></div><div class="mock-link"></div><div class="mock-link" style="width:16px"></div></div>
+            </div>
+            <div class="mock-hero-inner">
+              <div style="font-size:22px;margin-bottom:8px">💬</div>
+              <div class="mock-h1">WhatsApp API Dashboard</div>
+              <div class="mock-sub">ניהול, שליחה, וניטור הודעות — הכל במקום אחד</div>
+              <div style="display:flex;gap:8px;justify-content:center">
+                <div class="mock-btn">📨 שלח הודעה</div>
+                <div style="background:#141c15;color:#5a7059;padding:7px 16px;border-radius:7px;font-size:10px;font-weight:700;border:1px solid #1e2b1d">📊 לוגים</div>
+              </div>
+            </div>
+            <div class="mock-cards">
+              <div class="mock-card">
+                <div class="mc-icon">📨</div>
+                <div class="mc-title">הודעות נשלחו</div>
+                <div style="font-size:14px;font-weight:800;color:#25D366;margin-bottom:4px">1,284</div>
+                <div class="mc-line"></div>
+              </div>
+              <div class="mock-card">
+                <div class="mc-icon">✅</div>
+                <div class="mc-title">נקראו</div>
+                <div style="font-size:14px;font-weight:800;color:#25D366;margin-bottom:4px">98.2%</div>
+                <div class="mc-line"></div>
+              </div>
+              <div class="mock-card">
+                <div class="mc-icon">🔔</div>
+                <div class="mc-title">Webhook</div>
+                <div style="font-size:9px;color:#25D366;font-weight:700;margin-bottom:4px">● פעיל</div>
+                <div class="mc-line"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="desktop-stand"></div>
+        <div class="desktop-base"></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:14px">מחשב נייד / שולחן עבודה</div>
+      </div>
+
+      <!-- Phone -->
+      <div class="phone-mock">
+        <div class="phone-frame">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <div class="phone-status">
+              <span>9:41</span>
+              <span>●●●▌</span>
+            </div>
+            <div class="phone-card">
+              <div class="pc-wa-logo">💬</div>
+              <div class="pc-title">WhatsApp API</div>
+              <div class="pc-price">₪199/חודש</div>
+              <div class="pc-feature">גישה מלאה לAPI</div>
+              <div class="pc-feature">שליחה ללא הגבלה</div>
+              <div class="pc-feature">Webhook + Dashboard</div>
+              <div class="pc-feature">תמיכה בעברית</div>
+              <div class="pc-btn">קנו עכשיו 🚀</div>
+            </div>
+            <div style="background:#141c15;border-radius:8px;padding:8px;border:1px solid #1e2b1d">
+              <div style="font-size:8px;color:var(--muted2);margin-bottom:5px;font-weight:600">📊 סטטוס אחרון</div>
+              <div style="font-size:7px;color:#25D366;margin-bottom:3px">✓ חיבור Meta — פעיל</div>
+              <div style="font-size:7px;color:#25D366;margin-bottom:3px">✓ Webhook — מקושר</div>
+              <div style="font-size:7px;color:var(--muted2)">● הודעה אחרונה: לפני 2 דק'</div>
+            </div>
+          </div>
+          <div class="phone-bottom"></div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:14px;text-align:center">iPhone / Android</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- SETUP UPSELL -->
+<section id="setup-service">
+  <div class="section-inner">
+    <div style="text-align:center;margin-bottom:40px">
+      <div class="section-tag">שירות נוסף</div>
+      <h2 class="section-title">לא רוצים לעשות את זה לבד?</h2>
+      <p class="section-sub" style="margin:0 auto">אנחנו מגדירים לכם הכל — מ-A ועד ז׳.</p>
+    </div>
+    <div class="setup-upsell fade-up">
+      <div class="su-glow"></div>
+      <div class="su-badge">⭐ שירות פרמיום</div>
+      <h3 class="su-title">הגדרה מלאה על ידי AutoScale</h3>
+      <p class="su-desc">צוות AutoScale מחבר עבורכם את כל המערכת — Meta API, פרופיל עסקי, Webhook, ואינטגרציה לכלי האוטומציה שלכם. אתם לא נוגעים בשום דבר.</p>
+      <div class="su-price">₪2,000 <span style="font-size:18px;color:var(--muted)">+ מע"מ</span></div>
+      <div class="su-tax">תשלום חד-פעמי · על גבי המנוי החודשי</div>
+      <div class="su-features">
+        <div class="su-feat">חיבור Meta API</div>
+        <div class="su-feat">הגדרת Webhook</div>
+        <div class="su-feat">אינטגרציה ל-Make/n8n</div>
+        <div class="su-feat">הדרכה אישית</div>
+      </div>
+      <p style="font-size:14px;color:var(--muted2);margin-bottom:20px">כדי לקבל שירות זה — קודם רכשו את המנוי החודשי, צרו חשבון, ואז קבעו שיחה.</p>
+      <a href="[SCHEDULING_LINK]" class="btn-schedule">📅 קביעת שיחה עם ריצ׳רד</a>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="section-inner">
+    <div style="text-align:center">
+      <div class="section-tag">שאלות נפוצות</div>
+      <h2 class="section-title">יש שאלות? יש תשובות.</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>האם צריך חשבון Meta Business?</span>
+          <span class="faq-chevron">▾</span>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">כן. כדי להשתמש ב-WhatsApp Cloud API צריך חשבון Meta Business מאומת. המדריך שלנו מסביר בדיוק איך לפתוח ולאמת אחד בחינם.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>כמה הודעות אפשר לשלוח?</span>
+          <span class="faq-chevron">▾</span>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">בהתחלה Meta מאפשרת שליחה ל-1,000 שיחות ייחודיות לחודש. ככל שמאמתים את החשבון וצוברים היסטוריה חיובית — המכסה עולה אוטומטית.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>האם ניתן לחבר ל-Make.com?</span>
+          <span class="faq-chevron">▾</span>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">כן — בקלות. השירות שלנו תומך בחיבור HTTP מלא, כך שאפשר לחבר לכל Make.com scenario, n8n, Zapier, או כל כלי שתומך ב-webhook.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>כמה זמן לוקחת ההגדרה?</span>
+          <span class="faq-chevron">▾</span>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">עם המדריכים שלנו, ההגדרה הבסיסית לוקחת בין 20 דקות לשעה. אם אתם מגדירים לבד — כולל חיבור Meta ו-webhook. עם שירות ההגדרה שלנו — אנחנו עושים הכל תוך יום עסקים.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>האם אפשר לשנות מספר טלפון?</span>
+          <span class="faq-chevron">▾</span>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">כן, אפשר להחליף מספר דרך פאנל Meta. שימו לב — מספר שכבר משמש כחשבון WhatsApp רגיל יצריך הסרה קודמת מהאפליקציה הרגילה.</div></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>מה קורה אם אביטל את המנוי?</span>
+          <span class="faq-chevron">▾</span>
+        </div>
+        <div class="faq-a"><div class="faq-a-inner">שלחו מייל לביטול ל-support@autoscalehq.io עם שם מלא ואימייל החשבון. ביטול יתבצע תוך 7 ימי עסקים. לא מתבצע החזר כספי בגין תקופות שכבר שולמו. ראו את מדיניות הביטול המלאה למטה.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TERMS & CANCELLATION -->
+<section id="terms">
+  <div class="section-inner">
+    <div style="text-align:center;margin-bottom:40px">
+      <div class="section-tag">משפטי</div>
+      <h2 class="section-title">תנאים ומדיניות</h2>
+    </div>
+    <div class="terms-grid">
+      <!-- Hebrew Terms -->
+      <div class="terms-card">
+        <div class="terms-header" onclick="toggleTerms(this)">
+          <span>🇮🇱 תנאי שימוש ומדיניות ביטול — עברית</span>
+          <span class="faq-chevron">▾</span>
+        </div>
+        <div class="terms-body" style="display:block">
+          <h4>1. השירות</h4>
+          AutoScale מספקת גישה לממשק API לשליחת וקבלת הודעות WhatsApp דרך Meta Cloud API. השירות ניתן כ-SaaS ומחויב חודשי.
+          <h4>2. תשלום וחיוב</h4>
+          המנוי מתחדש אוטומטית מדי חודש. המחיר המוצג כולל שימוש בפלטפורמה ואינו כולל חיובי Meta נפרדים (אם קיימים).
+          <h4>3. אחריות משתמש</h4>
+          המשתמש אחראי לעמידה בתנאי השימוש של Meta/WhatsApp, לאי-שליחת ספאם, ולאי-שימוש בשירות למטרות בלתי חוקיות.
+          <div class="cancel-highlight">
+            <strong>📋 מדיניות ביטול</strong><br/>
+            לביטול המנוי יש לשלוח בקשת ביטול בכתב לכתובת:<br/>
+            <strong>support@autoscalehq.io</strong><br/>
+            יש לציין: שם מלא, כתובת אימייל של החשבון, וסיבת הביטול.<br/>
+            הביטול יכנס לתוקף תוך <strong>7 ימי עסקים</strong> מקבלת הבקשה.<br/>
+            <strong>לא מתבצע כל החזר כספי</strong> בגין תקופות שכבר שולמו, לרבות חלק מחודש.
+          </div>
+        </div>
+      </div>
+      <!-- English Terms -->
+      <div class="terms-card">
+        <div class="terms-header" onclick="toggleTerms(this)">
+          <span>🇬🇧 Terms of Service & Cancellation Policy — English</span>
+          <span class="faq-chevron">▾</span>
+        </div>
+        <div class="terms-body" style="display:none;direction:ltr;text-align:left">
+          <h4>1. The Service</h4>
+          AutoScale provides access to a WhatsApp API interface for sending and receiving messages via Meta Cloud API. The service is provided as SaaS and billed monthly.
+          <h4>2. Payment & Billing</h4>
+          Your subscription renews automatically each month. The displayed price covers platform access and does not include any separate Meta charges (if applicable).
+          <h4>3. User Responsibility</h4>
+          Users are responsible for complying with Meta/WhatsApp's terms of service, not sending spam, and not using the service for illegal purposes.
+          <div class="cancel-highlight" style="direction:ltr;text-align:left">
+            <strong>📋 Cancellation Policy</strong><br/>
+            To cancel your subscription, send a written cancellation request to:<br/>
+            <strong>support@autoscalehq.io</strong><br/>
+            Include: full name, account email address, and reason for cancellation.<br/>
+            Cancellations take effect within <strong>7 business days</strong> of receiving your request.<br/>
+            <strong>No refunds</strong> are issued for periods already paid, including partial months.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-logo">Auto<span>Scale</span> <span style="font-size:13px;color:var(--muted2);font-family:'Heebo',sans-serif;font-weight:400">WhatsApp API</span></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">powered by AutoScale · autoscalehq.io</div>
+    </div>
+    <div class="footer-links">
+      <a href="wa-success.html">לאחר רכישה</a>
+      <a href="wa-setup-meta.html">מדריך Meta API</a>
+      <a href="wa-setup-profile.html">פרופיל עסקי</a>
+      <a href="wa-setup-http.html">הגדרת HTTP</a>
+      <a href="https://autoscalehq.io">אתר ראשי</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2025 AutoScale · כל הזכויות שמורות</div>
+    <a href="https://wa.me/972545764327" class="footer-wa">💬 תמיכה בWA</a>
+  </div>
+</footer>
+
+</div><!-- end heContent -->
+
+<script>
+// Language toggle
+function setLang(lang){
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.lang-btn[onclick*="'+lang+'"]').classList.add('active');
+  if(lang==='en'){
+    document.getElementById('heContent').style.display='none';
+    document.getElementById('enNotice').style.display='block';
+    document.querySelector('.header-cta').textContent='Get Started';
+  } else {
+    document.getElementById('heContent').style.display='';
+    document.getElementById('enNotice').style.display='none';
+    document.querySelector('.header-cta').textContent='התחילו עכשיו';
+  }
+}
+
+// FAQ toggle
+function toggleFaq(el){
+  const item=el.closest('.faq-item');
+  item.classList.toggle('open');
+}
+
+// Terms toggle
+function toggleTerms(el){
+  const body=el.nextElementSibling;
+  body.style.display=body.style.display==='none'?'block':'none';
+  el.querySelector('.faq-chevron').style.transform=body.style.display==='block'?'rotate(180deg)':'';
+  el.querySelector('.faq-chevron').style.color=body.style.display==='block'?'var(--wa)':'var(--muted2)';
+}
+
+// Scroll helper
+function scrollTo(sel){
+  document.querySelector(sel).scrollIntoView({behavior:'smooth'});
+}
+
+// Scroll animations
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')});
+},{threshold:.15});
+document.querySelectorAll('.fade-up').forEach(el=>obs.observe(el));
+</script>
+<!-- ===== COOKIE BANNER + TRACKING ===== -->
+<style>
+#cookieBanner{position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#0f1510;border-top:1px solid #1e2b1d;padding:16px 5%;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;backdrop-filter:blur(16px);transform:translateY(100%);transition:transform .4s cubic-bezier(.16,1,.3,1);box-shadow:0 -8px 40px rgba(0,0,0,.5)}
+#cookieBanner.show{transform:translateY(0)}
+.cb-text{font-size:13px;color:#7a9478;line-height:1.6;max-width:600px}
+.cb-text a{color:#25D366;text-decoration:none;font-weight:600}
+.cb-text a:hover{text-decoration:underline}
+.cb-btns{display:flex;gap:10px;flex-shrink:0}
+.cb-accept{background:#25D366;color:#000;border:none;padding:9px 22px;border-radius:9px;font-family:"Heebo",sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:.15s}
+.cb-accept:hover{background:#1fbd58}
+.cb-decline{background:transparent;color:#5a7059;border:1px solid #1e2b1d;padding:9px 18px;border-radius:9px;font-family:"Heebo",sans-serif;font-weight:600;font-size:13px;cursor:pointer;transition:.15s}
+.cb-decline:hover{border-color:#25D366;color:#25D366}
+</style>
+
+<div id="cookieBanner" role="dialog" aria-label="עוגיות">
+  <div class="cb-text">
+    🍪 אנחנו משתמשים בעוגיות לניתוח תנועה ושיפור החוויה.
+    <a href="https://autoscalehq.io/cookies.html" target="_blank">מדיניות עוגיות</a> ·
+    <a href="https://autoscalehq.io/privacy.html" target="_blank">פרטיות</a>
+  </div>
+  <div class="cb-btns">
+    <button class="cb-decline" onclick="cookieChoice(false)">דחה</button>
+    <button class="cb-accept" onclick="cookieChoice(true)">אשר הכל ✓</button>
+  </div>
+</div>
+
+<script>
+var META_PIXEL_ID = "10211443525862398";
+
+function cookieChoice(accepted) {
+  localStorage.setItem("as_cookie_consent", accepted ? "1" : "0");
+  document.getElementById("cookieBanner").classList.remove("show");
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ event: "cookie_consent", consent_status: accepted ? "granted" : "denied" });
+  if (accepted) fireTracking();
+}
+
+function fireTracking() {
+  if (typeof fbq === "undefined") {
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");
+    fbq("init", META_PIXEL_ID);
+    fbq("track", "PageView");
+  }
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ event: "consent_granted" });
+}
+
+(function() {
+  var stored = localStorage.getItem("as_cookie_consent");
+  if (stored === "1") {
+    fireTracking();
+  } else if (stored === null) {
+    setTimeout(function() {
+      var b = document.getElementById("cookieBanner");
+      if (b) b.classList.add("show");
+    }, 1200);
+  }
+})();
+</script>
+<!-- ===== END TRACKING ===== -->
+</body>
+</html>
