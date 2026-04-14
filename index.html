@@ -9,8 +9,8 @@
 <meta name="theme-color" content="#0A0C0F">
 <meta name="mobile-web-app-capable" content="yes">
 <title>AutoScale WhatsApp</title>
-<link rel="icon" type="image/jpeg" href="https://raw.githubusercontent.com/richard36901-source/Home-page/main/logo.jpg">
-<link rel="apple-touch-icon" sizes="180x180" href="https://raw.githubusercontent.com/richard36901-source/Home-page/main/logo.jpg">
+<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/richard36901-source/donna-whatsapp/main/logoclean.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://raw.githubusercontent.com/richard36901-source/donna-whatsapp/main/logoclean.png">
 <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiQXV0b3NjYWxlIFdoYXRzQXBwIiwic2hvcnRfbmFtZSI6IkF1dG9zY2FsZSIsInN0YXJ0X3VybCI6Ii8iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMEEwQzBGIiwidGhlbWVfY29sb3IiOiIjMEEwQzBGIn0=">
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -81,6 +81,27 @@ const STS = [{
   icon: "✅"
 }];
 const EMOJIS = ["👤", "👩‍💼", "👨‍💼", "🧑‍💼", "👷", "🧔", "👩‍🔧", "👨‍🏫", "🧑‍🍳", "👩‍⚕️", "👨‍🎨", "🧑‍🚀", "🦸", "🧙", "🤖", "🎃", "🐱", "🦊", "🐻", "🐼", "🦁", "🐸", "🦄", "🐲", "🌻", "⭐", "🔥", "💎", "🏠", "🚀"];
+
+function getAppleEmojiUrl(emoji) {
+  try {
+    const pts = [...emoji]
+      .map(c => c.codePointAt(0))
+      .filter(c => c !== 0xFE0F); // strip variation selector, keep ZWJ
+    return `https://cdn.jsdelivr.net/npm/emoji-datasource-apple/img/apple/64/${pts.map(p => p.toString(16)).join('-')}.png`;
+  } catch(e) { return null; }
+}
+
+function AppleEmoji({ emoji, size = 22, style = {} }) {
+  const [failed, setFailed] = React.useState(false);
+  const url = getAppleEmojiUrl(emoji);
+  if (failed || !url) return React.createElement("span", { style: { fontSize: size, lineHeight: 1, ...style } }, emoji);
+  return React.createElement("img", {
+    src: url,
+    alt: emoji,
+    onError: () => setFailed(true),
+    style: { width: size, height: size, display: "inline-block", verticalAlign: "middle", objectFit: "contain", ...style }
+  });
+}
 function emojiFor(n) {
   let h = 0;
   for (let i = 0; i < n.length; i++) h = n.charCodeAt(i) + ((h << 5) - h);
@@ -347,12 +368,11 @@ function Av({
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      fontSize,
       background: "rgba(255,255,255,0.04)",
       border: "1px solid rgba(255,255,255,0.06)",
       flexShrink: 0
     }
-  }, emoji || "👤");
+  }, /*#__PURE__*/React.createElement(AppleEmoji, { emoji: emoji || "👤", size: Math.round(fontSize * 1.1) }));
 }
 function TagPill({
   name,
@@ -405,9 +425,12 @@ function StatusBadge({
       border: `1px solid ${s.color}25`,
       borderRadius: big ? 8 : 6,
       padding: big ? "5px 12px" : "3px 8px",
-      whiteSpace: "nowrap"
+      whiteSpace: "nowrap",
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 4
     }
-  }, s.icon, " ", s.label);
+  }, /*#__PURE__*/React.createElement(AppleEmoji, { emoji: s.icon, size: big ? 14 : 12 }), " ", s.label);
 }
 function LoginPage({
   onLogin
@@ -701,18 +724,18 @@ function QuickEdit({
       setShowEmojis(false);
     },
     style: {
-      width: 40,
-      height: 40,
+      width: 44,
+      height: 44,
       borderRadius: 10,
       border: emoji === e ? "2px solid #25D366" : "2px solid transparent",
       background: emoji === e ? "rgba(37,211,102,0.1)" : "rgba(255,255,255,0.02)",
-      fontSize: 22,
       cursor: "pointer",
       display: "flex",
       alignItems: "center",
-      justifyContent: "center"
+      justifyContent: "center",
+      padding: 4
     }
-  }, e))), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement(AppleEmoji, { emoji: e, size: 28 })))), /*#__PURE__*/React.createElement("button", {
     onClick: () => canPin && setPinned(!pinned),
     style: {
       width: "100%",
@@ -2811,16 +2834,7 @@ function App() {
         flexDirection: out ? "row-reverse" : "row",
         maxWidth: "88%"
       }
-    }, out && /*#__PURE__*/React.createElement("img", {
-      src: DONNA_AVATAR,
-      style: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        flexShrink: 0,
-        marginBottom: 2
-      }
-    }), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         borderRadius: 16,
         padding: "10px 14px 6px",
